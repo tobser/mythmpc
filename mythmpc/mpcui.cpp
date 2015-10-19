@@ -3,6 +3,7 @@
 
 // MythTV headers
 #include <mythtv/mythcontext.h>
+#include <mythtv/mythcoreutil.h>
 #include <mythtv/libmythui/mythuibutton.h>
 #include <mythtv/libmythui/mythuitext.h>
 #include <mythtv/libmythui/mythmainwindow.h>
@@ -82,7 +83,11 @@ bool Mpc::create(void)
     connect(m_MpcSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(displayMpdConnError(QAbstractSocket::SocketError)));
 
-    m_MpcSocket->connectToHost("localhost", 6600);
+    QString host =
+        gCoreContext->GetSetting("mpd-host", "localhost");
+    int port =
+        gCoreContext->GetSetting("mpd-port", "6600").toInt();
+    m_MpcSocket->connectToHost(host, port);
 
     m_PingTimer = new QTimer(this);
     connect(m_PingTimer, SIGNAL(timeout()), this, SLOT(sendPing()));
