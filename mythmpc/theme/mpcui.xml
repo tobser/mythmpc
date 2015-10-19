@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mythuitheme>
+    <window name="mpc">
+        <area>0,0,100%,100%</area>
+        <shape name="background">
+            <area>0,0,100%,100%,</area>
+            <type>roundbox</type>
+            <cornerradius>10</cornerradius>
+            <line color="#FFFFFF" alpha="255" width="1" />
+            <fill color="Green" alpha="30" />
+        </shape>
+
+        <textarea name="title">
+            <area>10,10,100%-10,100</area>
+            <font>baseextralarge</font>
+            <align>allcenter</align>
+        </textarea>
+
+        <clock name="time">
+            <area>780,5,480,40</area>
+            <template>%TIME%</template>
+            <align>vcenter,right</align>
+        </clock>
+
+        <buttonlist name="track_list">
+            <area>10,140,100%-10,480</area>
+            <layout>vertical</layout>
+            <spacing>4</spacing>
+            <wrapstyle>selection</wrapstyle>
+            <buttonarea>0,0,100%-10,400</buttonarea>
+            <statetype name="buttonitem">
+                <area>0,0,100%,80</area>
+                <state name="active">
+                    <area>0,0,100%,100</area>
+                    <textarea name="text" >
+                        <area>0,0,100%,100</area>
+                        <font>baselarge</font>
+                        <area>33,5,100%,35</area>
+                        <template>
+                            %TIME_LEFT| %%TEXT%
+                        </template>
+                    </textarea>
+
+                    <textarea name="timer_type" >
+                        <area>100,45,100%,25</area>
+                        <template>
+                            %TIMER_TYPE%: %TIME_SPAN%%DATE_TIME% %(|REOCCURRENCE|)%
+                        </template>
+                    </textarea>
+                    <textarea name="actions" >
+                        <area>100,72,100%,25</area>
+                        <template>Actions: %ACTIONS</template>
+                    </textarea>
+                </state>
+                <state name="selectedactive" from="active">
+                    <shape name="selectbar">
+                        <area>0,0,100%,100%</area>
+                        <type>roundbox</type>
+                        <line color="#999999" alpha="255" width="2" />
+                        <cornerradius>13</cornerradius>
+                    </shape>
+                </state>
+                <state name="selectedinactive" from="active" />
+            </statetype>
+
+        </buttonlist>
+
+        <textarea name="infotext">
+            <area>10,100%-150,100%-10,100</area>
+            <font>basemedium</font>
+            <multiline>true</multiline>
+            <align>allcenter</align>
+        </textarea>
+
+        <button name="previous" from="basebutton">
+            <area>290,100%-50,120,40</area>
+            <value>Previous</value>
+        </button>
+        <button name="play_pause" from="basebutton">
+            <area>470,100%-50,120,40</area>
+            <value>Play</value>
+        </button>
+        <button name="next" from="basebutton">
+            <area>610,100%-50,120,40</area>
+            <value>Next</value>
+        </button>
+        <button name="stop" from="basebutton">
+            <area>790,100%-50,120,40</area>
+            <value>Stop</value>
+        </button>
+
+        <button name="volume_up" from="basebutton">
+            <area>790,100%-300,120,40</area>
+            <value>+</value>
+        </button>
+        <button name="volume_down" from="basebutton">
+            <area>1090,100%-300,120,40</area>
+            <value>-</value>
+        </button>
+    </window>
+
+    <window name="mpc_config">
+        <area>0,0,100%,100%</area>
+        <shape name="background">
+            <area>0,0,100%,100%,</area>
+            <type>roundbox</type>
+            <cornerradius>10</cornerradius>
+            <line color="#FFFFFF" alpha="255" width="1" />
+            <fill color="Green" alpha="30" />
+        </shape>
+
+        <textarea name="title">
+            <area>10,10,100%-10,100</area>
+            <font>baseextralarge</font>
+            <align>allcenter</align>
+        </textarea>
+
+        <clock name="current_time">
+            <area>780,5,480,40</area>
+            <template>%TIME%</template>
+            <align>vcenter,right</align>
+        </clock>
+
+        <textarea name="show_message_description">
+            <area>100,75,100%-100,30</area>
+            <align>vcenter</align>
+            <value>Show message when timer is executed.</value>
+        </textarea>
+
+        <checkbox name="show_message">
+            <area>50,75,30,30</area>
+            <statetype name="background">
+                <state name="active">
+                    <imagetype name="background">
+                        <filename>unchecked.png</filename>
+                    </imagetype>
+                </state>
+                <state name="selected">
+                    <imagetype name="background">
+                        <filename>checkbox_background_selected.png</filename>
+                    </imagetype>
+                </state>
+                <state name="disabled" />
+            </statetype>
+            <statetype name="checkstate">
+                <area>0,0,30,30</area>
+                <state type="off" />
+                <state type="half">
+                    <imagetype name="background">
+                        <filename>checked_selected.png</filename>
+                    </imagetype>
+                </state>
+                <state type="full">
+                    <imagetype name="mark">
+                        <filename>checked.png</filename>
+                    </imagetype>
+                </state>
+            </statetype>
+        </checkbox>
+
+        <textedit name="message" from="basetextedit"  >
+            <area>50,110,1180,80</area>
+            <statetype name="background">
+                <state name="active">
+                    <area>0,0,1180,80</area>
+                    <shape name="background" >
+                        <area>0,0,100%,100%</area>
+                        <type>roundbox</type>
+                        <cornerradius>4</cornerradius>
+                    </shape>
+
+                    <shape name="textbackground">
+                        <area>10,10,100%-10,100%-10</area>
+                        <type>roundbox</type>
+                        <cornerradius>4</cornerradius>
+                        <fill color="#FFFFFF" alpha="200" />
+                    </shape>
+                </state>
+                <state name="selected" from="active">
+                </state>
+                <state name="inactive" from="active" />
+            </statetype>
+            <imagetype name="cursor">
+                <filename>cursor.png</filename>
+            </imagetype>
+            <textarea name="text">
+                <area>13,13,100%-13,100%-13</area>
+                <font>basesmallblack</font>
+                <multiline>true</multiline>
+            </textarea>
+        </textedit>
+
+        <textarea name="message_bg">
+            <area>50,110,1180,80</area>
+            <font>baselarge</font>
+            <align>allcenter</align>
+            <alpha>60</alpha>
+            <value>Timer Description</value>
+        </textarea>
+
+        <!-- actions to execute -->
+        <button name="add_action" from="basewidebutton">
+            <area>50,210,100%-50,40</area>
+            <value>Add action</value>
+        </button>
+
+        <shape name="action_list_bg">
+            <area>48,260,100%-48,200</area>
+            <type>roundbox</type>
+            <line color="#999999" alpha="255" width="2" />
+            <cornerradius>13</cornerradius>
+        </shape>
+
+        <buttonlist name="action_list">
+            <area>48,260,100%-48,200</area>
+            <layout>vertical</layout>
+            <spacing>4</spacing>
+            <wrapstyle>selection</wrapstyle>
+            <buttonarea>0,0,100%,100%</buttonarea>
+            <statetype name="buttonitem">
+                <area>0,0,100%,30</area>
+                <state name="active">
+                    <area>0,0,100%,30</area>
+                    <textarea name="action" >
+                        <area>40,5,100%-40,25</area>
+                        <template>
+                            %ORDER_NUMBER%.  %ACTION_TYPE%: %ACTION%
+                        </template>
+                    </textarea>
+                </state>
+                <state name="selectedactive" from="active">
+                    <shape name="selectbar">
+                        <area>0,0,100%,30</area>
+                        <type>roundbox</type>
+                        <line color="#999999" alpha="255" width="2" />
+                        <cornerradius>13</cornerradius>
+                    </shape>
+                </state>
+                <state name="selectedinactive" from="active" />
+            </statetype>
+
+        </buttonlist>
+
+        <!-- time setting -->
+        <textarea name="fixed_time_description">
+            <area>100,480,100%-100,30</area>
+            <align>vcenter</align>
+            <value>Use a fixed time instead of timespan.</value>
+        </textarea>
+
+        <checkbox name="fixed_time">
+            <area>50,480,30,30</area>
+            <statetype name="background">
+                <state name="active">
+                    <imagetype name="background">
+                        <filename>unchecked.png</filename>
+                    </imagetype>
+                </state>
+                <state name="selected">
+                    <imagetype name="background">
+                        <filename>checkbox_background_selected.png</filename>
+                    </imagetype>
+                </state>
+                <state name="disabled" />
+            </statetype>
+            <statetype name="checkstate">
+                <area>0,0,30,30</area>
+                <state type="off" />
+                <state type="half">
+                    <imagetype name="background">
+                        <filename>checked_selected.png</filename>
+                    </imagetype>
+                </state>
+                <state type="full">
+                    <imagetype name="mark">
+                        <filename>checked.png</filename>
+                    </imagetype>
+                </state>
+            </statetype>
+        </checkbox>
+
+        <spinbox name="time_span">
+            <area>50,520,600,40</area>
+            <layout>horizontal</layout>
+            <statetype name="buttonitem">
+                <area>0,0,600,40</area>
+                <state name="active">
+                    <area>0,0,600,40</area>
+                    <shape name="spanbackground">
+                        <area>0,0,100%,100%</area>
+                        <type>roundbox</type>
+                        <cornerradius>10</cornerradius>
+                        <line color="#FFFFFF" alpha="255" width="1" />
+                        <fill color="Red" alpha="30" />
+                    </shape>
+                    <textarea name="buttontext">
+                        <area>5,5,600,30</area>
+                        <cutdown>yes</cutdown>
+                        <font>basesmall</font>
+                        <align>allcenter</align>
+                        <template>%1 Minute(s)</template>
+                    </textarea>
+                </state>
+                <state name="selectedactive" from="active" >
+                    <shape name="spanbackground">
+                        <area>0,0,100%,100%</area>
+                        <type>roundbox</type>
+                        <cornerradius>10</cornerradius>
+                        <fill style="gradient">
+                            <gradient start="#52CA38"
+                                end="#349838"
+                                alpha="255"
+                                />
+                        </fill>
+                    </shape>
+                </state>
+                <state name="selectedinactive" from="active" />
+            </statetype>
+        </spinbox>
+
+        <textedit name="time" from="basetextedit">
+            <area>50,520,50%-25,40</area>
+        </textedit>
+
+        <button name="reoccurrence" from="basewidebutton">
+            <area>50%+25,520,100%-50,40</area>
+            <value>One shot</value>
+        </button>
+
+
+        <textarea name="infotext">
+            <area>10,100%-130,100%-10,80</area>
+            <font>basemedium</font>
+            <multiline>true</multiline>
+            <align>allcenter</align>
+        </textarea>
+
+        <button name="ok" from="basebutton">
+            <area>300,100%-50,160,40</area>
+            <value>OK</value>
+        </button>
+
+        <button name="delete" from="basebutton">
+            <area>670,100%-50,160,40</area>
+            <value>Delete</value>
+        </button>
+
+        <button name="cancel" from="basebutton">
+            <area>860,100%-50,120,40</area>
+            <value>Cancel</value>
+        </button>
+</window>
+
+    <window name="select_reoccurrence">
+        <area>0,0,100%,100%</area>
+
+        <animation trigger="AboutToShow">
+            <section duration="120">
+                <alpha start="0" end="255" easingcurve="OutQuart"/>
+                <zoom start="0" end="100" easingcurve="OutQuart"/>
+            </section>
+        </animation>
+
+        <animation trigger="AboutToHide">
+            <section duration="120">
+                <alpha start="255" end="0" easingcurve="InQuart"/>
+                <zoom start="100" end="0" easingcurve="InQuart"/>
+            </section>
+        </animation>
+
+        <shape name="background">
+            <area>320,110,640,500</area>
+            <type>roundbox</type>
+            <cornerradius>10</cornerradius>
+            <line color="#FFFFFF" alpha="255" width="1" />
+            <fill color="Green" alpha="255" />
+        </shape>
+
+        <textarea name="title">
+            <area>320,110,640,60</area>
+            <multiline>yes</multiline>
+            <align>allcenter</align>
+            <value>Select type of reoccurence</value>
+        </textarea>
+
+        <buttonlist name="list">
+            <area>320,170,640,380</area>
+            <layout>vertical</layout>
+            <spacing>4</spacing>
+            <wrapstyle>selection</wrapstyle>
+            <buttonarea>0,0,100%,100%</buttonarea>
+            <statetype name="buttonitem">
+                <area>0,0,100%,30</area>
+                <state name="active">
+                    <area>0,0,100%,30</area>
+                    <textarea name="text" >
+                        <area>40,5,100%-40,25</area>
+                        <value>foobar</value>
+                    </textarea>
+
+                    <statetype name="buttoncheck">
+                        <position>91%,5</position>
+                        <state type="off">
+                            <imagetype name="checkoff">
+                                <filename>lb-check-empty.png</filename>
+                            </imagetype>
+                        </state>
+                        <state type="half">
+                            <imagetype name="checkhalf">
+                                <filename>lb-check-half.png</filename>
+                            </imagetype>
+                        </state>
+                        <state type="full">
+                            <imagetype name="checkfull">
+                                <filename>lb-check-full.png</filename>
+                            </imagetype>
+                        </state>
+                    </statetype>
+
+                </state>
+                <state name="selectedactive" from="active">
+                    <shape name="selectbar">
+                        <area>0,0,100%,30</area>
+                        <type>roundbox</type>
+                        <line color="#999999" alpha="255" width="2" />
+                        <cornerradius>13</cornerradius>
+                    </shape>
+                </state>
+                <state name="selectedinactive" from="active" />
+            </statetype>
+        </buttonlist>
+
+        <button name="ok" from="basewidebutton">
+            <area>500,550,80,40</area>
+            <value>OK</value>
+        </button>
+
+    </window>
+</mythuitheme>

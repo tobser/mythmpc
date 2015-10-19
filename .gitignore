@@ -1,0 +1,19 @@
+*.o
+*.so
+core
+
+# Generated MOC, resource and UI files
+moc_*.cpp
+
+# created by ./configure
+Makefile
+
+# doxygen
+html/
+
+#ctags
+tags
+
+#kdevelop
+*.kdev4
+.kdev4/*
