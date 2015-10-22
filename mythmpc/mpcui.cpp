@@ -11,9 +11,12 @@
 #include <mythtv/libmythui/mythdialogbox.h>
 #include <mythtv/libmythui/mythuiutils.h>
 
+
+
 #include <QSignalMapper>
 // MythMpc headers
 #include "mpcui.h"
+#include "mpcconf.h"
 
 Mpc::Mpc(MythScreenStack *parent):
     MythScreenType(parent, "mpc"),
@@ -24,12 +27,126 @@ Mpc::Mpc(MythScreenStack *parent):
     m_InfoText(NULL),
     m_TitleText(NULL),
     m_ButtonList(NULL),
-    m_MpcSocket(NULL),
-    m_PingTimer(NULL),
-    m_PingTimeout(45000),
+    m_Mpc(NULL),
+    m_PollTimer(NULL),
+    m_PollTimeout(1500),
     m_VolUp(NULL),
-    m_VolDown(NULL)
+    m_VolDown(NULL),
+    m_VolUpDownStep(5)
 {
+}
+
+void mpc_error_callback(MpdObj *mi,int errorid, char *msg, void *userdata)
+{
+   LOG_RX(QString ("ERROR '%1': %2").arg(errorid).arg(msg));
+}
+
+QString Mpc::whatToString(ChangedStatusType w){
+    QString r = QString("Changed (0x%1): ").arg(w, 0, 16);;
+	r += (w & MPD_CST_PLAYLIST           ? "|PLAYLIST" : "");
+	r += (w & MPD_CST_SONGPOS            ? "|SONGPOS" : "");
+	r += (w & MPD_CST_SONGID             ? "|SONGID" : "");
+	r += (w & MPD_CST_DATABASE           ? "|DATABASE" : "");
+	r += (w & MPD_CST_UPDATING           ? "|UPDATING" : "");
+	r += (w & MPD_CST_VOLUME             ? "|VOLUME" : "");
+	r += (w & MPD_CST_TOTAL_TIME         ? "|TOTAL_TIME" : "");
+	r += (w & MPD_CST_ELAPSED_TIME       ? "|ELAPSED_TIME" : "");
+	r += (w & MPD_CST_CROSSFADE          ? "|CROSSFADE" : "");
+	r += (w & MPD_CST_RANDOM             ? "|RANDOM" : "");
+	r += (w & MPD_CST_REPEAT             ? "|REPEAT" : "");
+	r += (w & MPD_CST_AUDIO              ? "|AUDIO" : "");
+	r += (w & MPD_CST_STATE              ? "|STATE" : "");
+	r += (w & MPD_CST_PERMISSION         ? "|PERMISSION" : "");
+	r += (w & MPD_CST_BITRATE            ? "|BITRATE" : "");
+	r += (w & MPD_CST_AUDIOFORMAT        ? "|AUDIOFORMAT" : "");
+	r += (w & MPD_CST_STORED_PLAYLIST	 ? "|STORED_PLAYLIST" : "");
+    r += (w & MPD_CST_SERVER_ERROR       ? "|SERVER_ERROR" : "");
+    r += (w & MPD_CST_OUTPUT             ? "|OUTPUT" : "");
+    r += (w & MPD_CST_STICKER            ? "|STICKER" : "");
+    r += (w & MPD_CST_NEXTSONG           ? "|NEXTSONG" : "");
+    r += (w & MPD_CST_SINGLE_MODE        ? "|SINGLE_MODE" : "");
+    r += (w & MPD_CST_CONSUME_MODE       ? "|CONSUME_MODE" : "");
+    r += (w & MPD_CST_REPLAYGAIN         ? "|REPLAYGAIN" : "");
+    return r + "|";
+}
+
+void mpc_status_changed(MpdObj *mi, ChangedStatusType what)
+{
+    if (what == MPD_CST_ELAPSED_TIME)
+    {
+        return;
+    }
+    LOG_RX(Mpc::whatToString(what));
+    QString str;
+    if(what&MPD_CST_SONGID)
+    {
+        mpd_Song *song = mpd_playlist_get_current_song(mi);
+        if(song)
+        {
+            LOG_RX(QString("Song: %1 - %2\n").arg(song->artist).arg(song->title));
+        }
+    }
+
+    if(what&MPD_CST_STATE)
+    {
+        switch(mpd_player_get_state(mi))
+        {
+            case MPD_PLAYER_PLAY:
+                LOG_RX("Playing");
+                break;
+            case MPD_PLAYER_PAUSE:
+                LOG_RX("Paused");
+                break;
+            case MPD_PLAYER_STOP:
+                LOG_RX("Stopped");
+                break;
+            default:
+                break;
+        }
+    }
+
+    if(what&MPD_CST_REPEAT)
+        LOG_RX(QString("Repeat: %1").arg(mpd_player_get_repeat(mi)? "On":"Off"));
+
+    if(what&MPD_CST_RANDOM)
+        LOG_RX(QString("Random: %1").arg( mpd_player_get_random(mi)? "On":"Off"));
+
+    if(what&MPD_CST_VOLUME)
+        LOG_RX(QString("Volume: %1%%").arg(mpd_status_get_volume(mi)));
+
+    if(what&MPD_CST_CROSSFADE)
+        LOG_RX(QString("X-Fade: %1 sec.").arg(mpd_status_get_crossfade(mi)));
+
+    if(what&MPD_CST_UPDATING)
+    {
+        if(mpd_status_db_is_updating(mi))
+            LOG_RX("Started updating DB");
+        else
+            LOG_RX("Updating DB finished");
+    }
+    if(what&MPD_CST_DATABASE)
+        LOG_RX("Databased changed");
+
+    if(what&MPD_CST_PLAYLIST)
+        LOG_RX("Playlist changed");
+
+    /* not yet implemented signals */
+    if(what&MPD_CST_AUDIO)
+        LOG_RX("Audio Changed");
+
+    if(what&MPD_CST_TOTAL_TIME)
+        LOG_RX(QString("Total song time changed: %1:%2")
+                .arg(mpd_status_get_total_song_time(mi)/60)
+                .arg(mpd_status_get_total_song_time(mi)%60));
+
+        if(what&MPD_CST_PERMISSION)
+            LOG_RX("Permission: Changed");
+        if(what&MPD_CST_ELAPSED_TIME){
+            /*              LOG_TX("Time elapsed changed:"RESET" %02i:%02i\n",
+                            mpd_status_get_elapsed_song_time(mi)/60,
+                            mpd_status_get_elapsed_song_time(mi)%60);
+                            */
+        }
 }
 
 bool Mpc::create(void)
@@ -39,7 +156,7 @@ bool Mpc::create(void)
     foundtheme = LoadWindowFromXML("mpcui.xml", "mpc", this);
     if (!foundtheme)
     {
-        LOG_M(LOG_WARNING, "window mpc in mpcui.xml is missing."); 
+        LOG_("window mpc in mpcui.xml is missing."); 
         return  false;
     }
 
@@ -59,9 +176,10 @@ bool Mpc::create(void)
     UIUtilE::Assign(this, m_Prev, "previous", &err);
     UIUtilE::Assign(this, m_VolUp, "volume_up", &err);
     UIUtilE::Assign(this, m_VolDown, "volume_down", &err);
+    UIUtilE::Assign(this, m_Config, "config", &err);
     if (err)
     {
-        LOG_M(LOG_WARNING, "Theme is missing required elements.");
+        LOG_("Theme is missing required elements.");
         return  false;
     }
 
@@ -74,84 +192,105 @@ bool Mpc::create(void)
     connect(m_Prev,      SIGNAL(Clicked()), this, SLOT(prev()));
     connect(m_VolUp,     SIGNAL(Clicked()), this, SLOT(volUp()));
     connect(m_VolDown,   SIGNAL(Clicked()), this, SLOT(volDown()));
+    connect(m_Config,    SIGNAL(Clicked()), this, SLOT(openConfigWindow()));
+
 
     BuildFocusList();
     SetFocusWidget(m_PlayPause);
 
-    m_MpcSocket = new QTcpSocket(this);
-    connect(m_MpcSocket, SIGNAL(readyRead()), this, SLOT(readFromMpd()));
-    connect(m_MpcSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(displayMpdConnError(QAbstractSocket::SocketError)));
+    QString host = gCoreContext->GetSetting("mpd-host", "localhost");
+    int port = gCoreContext->GetSetting("mpd-port", "6600").toInt();
+    QString pass = gCoreContext->GetSetting("mpd-pass", "");
 
-    QString host =
-        gCoreContext->GetSetting("mpd-host", "localhost");
-    int port =
-        gCoreContext->GetSetting("mpd-port", "6600").toInt();
-    m_MpcSocket->connectToHost(host, port);
+    m_PollTimer = new QTimer(this);
+    connect(m_PollTimer, SIGNAL(timeout()), this, SLOT(poll()));
+    m_PollTimer->start(m_PollTimeout);
+    m_Mpc = mpd_new((char*) host.toLatin1().data(),port, (char*)pass.toLatin1().data());
+    mpd_signal_connect_error(m_Mpc,(ErrorCallback) mpc_error_callback , NULL);
+    mpd_signal_connect_status_changed(m_Mpc,(StatusChangedCallback)mpc_status_changed, NULL);
+    mpd_set_connection_timeout(m_Mpc, 10);
+    mpd_connect(m_Mpc);
 
-    m_PingTimer = new QTimer(this);
-    connect(m_PingTimer, SIGNAL(timeout()), this, SLOT(sendPing()));
-    m_PingTimer->start(m_PingTimeout);
-
-    poll();
+    LOG_("created...");
     return true;
 }
 
 void Mpc::poll(){
-    sendCommand("currentsong");
-    sendCommand("status");
+   mpd_status_update(m_Mpc);
+   m_PollTimer->start(m_PollTimeout);
 }
-void Mpc::sendPing(){
-    sendCommand("ping");
+void Mpc::stop(){
+    LOG_TX("stop");
+    mpd_player_stop(m_Mpc);
+    poll();
 }
-void Mpc::sendCommand(QString cmd){
-    LOG_M(LOG_WARNING, "sending '" + cmd + "'");
-    cmd = cmd + "\n";
-    m_MpcSocket->write(cmd.toLatin1(), (quint16) cmd.length());
-    m_MpcSocket->flush();
-    m_PingTimer->start(m_PingTimeout);
-}
-void Mpc::readFromMpd()
-{
-    while(m_MpcSocket->canReadLine())
+
+void Mpc::togglePlay(){
+    switch(mpd_player_get_state(m_Mpc))
     {
-        QString incomingData = m_MpcSocket->readLine();
-        incomingData = incomingData.trimmed();
-        LOG_M(LOG_WARNING, incomingData);
-        if (incomingData.startsWith("Title: ")){
-            QString t = incomingData.mid(7,incomingData.length());
-            LOG_M(LOG_WARNING, "setting titel to "+ t);
-            m_TitleText->SetText(t);
-        }
+        case MPD_PLAYER_PLAY:
+            LOG_TX("play => pause");
+            mpd_player_pause(m_Mpc);
+            break;
+        case MPD_PLAYER_PAUSE:
+            LOG_TX("pause => play");
+            mpd_player_pause(m_Mpc);
+            break;
+        case MPD_PLAYER_STOP:
+            LOG_TX("stopped => play");
+            mpd_player_play(m_Mpc);
+            break;
+        default:
+            break;
     }
+    poll();
 }
-void Mpc::displayMpdConnError(QAbstractSocket::SocketError socketError){
-    switch (socketError) {
-    case QAbstractSocket::RemoteHostClosedError:
-        LOG_M(LOG_WARNING, "Remote Host closed");
-        break;
-    case QAbstractSocket::HostNotFoundError:
-       LOG_M(LOG_WARNING, tr("The host was not found. Please check the "
-                                    "host name and port settings."));
-        break;
-    case QAbstractSocket::ConnectionRefusedError:
-       LOG_M(LOG_WARNING, tr("The connection was refused by the peer. "
-                                    "Make sure the fortune server is running, "
-                                    "and check that the host name and port "
-                                    "settings are correct."));
-        break;
-    default:
-        LOG_M(LOG_WARNING, tr("The following error occurred: %1.")
-                                 .arg(m_MpcSocket->errorString()));
-    }
+void Mpc::next(){
+    LOG_TX("next");
+    mpd_player_next(m_Mpc);
+    poll();
+};
+void Mpc::prev(){
+    LOG_TX("prev");
+    mpd_player_prev(m_Mpc);
+    poll();
+}
+void Mpc::volUp(){
+    changeVolume(+ m_VolUpDownStep);
+}
+void Mpc::volDown() {
+    changeVolume( - m_VolUpDownStep);
+}
+void Mpc::changeVolume(int vol){
+    int current = mpd_status_get_volume(m_Mpc);
+    if (current < 0) return;
+
+    int newVol  = current + vol;
+    if (newVol > 100) newVol = 100;
+    if (newVol < 0) newVol = 0;
+    if (current == newVol)
+        return;
+
+    LOG_TX(QString("Volume %1%% => %2%%").arg(current).arg(newVol));
+    mpd_status_set_volume(m_Mpc, newVol);
+    poll();
 }
 
-void Mpc::newClicked(void)
-{
-    openEditScreen();
-}
+void Mpc::openConfigWindow(){
+    MythScreenStack *st = GetMythMainWindow()->GetMainStack();
+    if (!st)
+    {
+        LOG_("Could not get main stack.");
+        return;
+    }
 
-void Mpc::itemClicked(MythUIButtonListItem * item)
-{
-    //TimerData val = qVariantValue<TimerData>(item->GetData());
+    MpcConf* conf = new MpcConf(st);
+    if (!conf->create())
+    {
+        LOG_("Could not create MPC UI.");
+        delete conf;
+        conf = NULL;
+        return;
+    }
+    st->AddScreen(conf);
 }

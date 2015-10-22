@@ -8,3 +8,4 @@ DEPENDPATH *= $${INCLUDEPATH}
 
 LIBS += -L$${LIBDIR} $$EXTRA_LIBS -lmythbase-$$LIBVERSION
 LIBS += -lmyth-$$LIBVERSION -lmythui-$$LIBVERSION 
+LIBS += -lmpd

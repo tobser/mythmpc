@@ -15,9 +15,9 @@ uifiles.files = theme/*
 INSTALLS += uifiles
 
 # Input
-HEADERS += mpcui.h
+HEADERS += mpcui.h  mpcconf.h
 
-SOURCES += main.cpp mpcui.cpp
+SOURCES += main.cpp mpcui.cpp mpcconf.cpp
 
 macx {
     QMAKE_LFLAGS += -flat_namespace -undefined suppress

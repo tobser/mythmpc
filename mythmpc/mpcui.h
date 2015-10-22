@@ -7,13 +7,18 @@
 #include <mythtv/libmythui/mythuibutton.h>
 #include <mythtv/libmythui/mythuispinbox.h>
 #include <mythtv/libmythui/mythuitext.h>
-#include <QTcpSocket>
 #include <QTimer>
 
+#include <libmpd-1.0/libmpd/libmpd.h>
+#include <libmpd-1.0/libmpd/debug_printf.h>
 
-#ifndef LOG_M
-#define LOG_M(level, message) LOG(VB_GENERAL, level, QString("MPC: %1") \
-                                    .arg(message))
+#ifndef _LOG
+
+#define _LOG(message) LOG(VB_GENERAL, LOG_WARNING, message)
+#define LOG_(message) _LOG(QString("MPC: ") + message)
+#define LOG_TX(message) _LOG(QString("MPC TX: ") + message)
+#define LOG_RX(message) _LOG(QString("MPC RX: ") + message)
+
 #endif
 
 class Mpc : public MythScreenType
@@ -22,41 +27,50 @@ class Mpc : public MythScreenType
 
     public:
         Mpc(MythScreenStack *parent);
+        ~Mpc(){
+            if (m_Mpc){
+                mpd_free(m_Mpc);
+                m_Mpc = NULL;
+            }
+        }
         bool create(void);
+        static QString whatToString(ChangedStatusType);
 
     public slots:
         void newClicked(void);
         void itemClicked(MythUIButtonListItem *);
         void onEditCompleted(bool started);
-        void sendCommand(QString cmd);
 
     private slots:
-        void stop() { sendCommand("stop"); };
-        void togglePlay(){ sendCommand("play");};
-        void next(){ sendCommand("next");};
-        void prev(){ sendCommand("previous");};
-        void volUp(){ sendCommand("volume +5");};
-        void volDown(){ sendCommand("volume -5");};
+        void stop();
+        void togglePlay();
+        void next();
+        void prev();
+        void volUp();
+        void volDown();
+
 
     private slots:
         void readFromMpd();
         void displayMpdConnError(QAbstractSocket::SocketError socketError);
-        void sendPing();
+        void poll();
+        void openConfigWindow();
 
     private:
-        void openEditScreen();
-        void poll();
+         void changeVolume(int volChange);
 
         MythUIButton     *m_Stop;
         MythUIButton     *m_PlayPause;
         MythUIButton     *m_Next;
         MythUIButton     *m_Prev;
+        MythUIButton     *m_Config;
         MythUIText       *m_InfoText;
         MythUIText       *m_TitleText;
         MythUIButtonList *m_ButtonList;
-        QTcpSocket       *m_MpcSocket;
-        QTimer           *m_PingTimer;
-        int               m_PingTimeout;
+        MpdObj           *m_Mpc;
+        QTimer           *m_PollTimer;
+        int               m_PollTimeout;
+        int               m_VolUpDownStep;
         MythUIButton *m_VolUp;
         MythUIButton *m_VolDown;
 };
