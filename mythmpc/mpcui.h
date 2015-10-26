@@ -27,37 +27,34 @@ class Mpc : public MythScreenType
 
     public:
         Mpc(MythScreenStack *parent);
-        ~Mpc(){
-            if (m_Mpc){
-                mpd_free(m_Mpc);
-                m_Mpc = NULL;
-            }
-        }
+        ~Mpc();
         bool create(void);
         static QString whatToString(ChangedStatusType);
+        InfoMap stateInfo;
+        void updateSongInfo();
+        void updatePlaybackState();
+        void updateInfo(QString key, QString value);
 
-    public slots:
-        void newClicked(void);
-        void itemClicked(MythUIButtonListItem *);
-        void onEditCompleted(bool started);
+        public slots:
+            void newClicked(void);
+            void itemClicked(MythUIButtonListItem *);
+            void onEditCompleted(bool started);
 
-    private slots:
-        void stop();
-        void togglePlay();
-        void next();
-        void prev();
-        void volUp();
-        void volDown();
-
-
-    private slots:
-        void readFromMpd();
-        void displayMpdConnError(QAbstractSocket::SocketError socketError);
-        void poll();
-        void openConfigWindow();
+        private slots:
+            void stop();
+            void togglePlay();
+            void next();
+            void prev();
+            void volUp();
+            void volDown();
+            void readFromMpd();
+            void displayMpdConnError(QAbstractSocket::SocketError socketError);
+            void poll();
+            void openConfigWindow();
 
     private:
-         void changeVolume(int volChange);
+        void changeVolume(int volChange);
+        void updateUi();
 
         MythUIButton     *m_Stop;
         MythUIButton     *m_PlayPause;

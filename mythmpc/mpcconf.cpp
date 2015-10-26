@@ -49,20 +49,28 @@ bool MpcConf::create(void)
         return  false;
     }
 
-    connect(m_Cancel,      SIGNAL(Clicked()), this, SLOT(close()));
+    connect(m_Cancel,      SIGNAL(Clicked()), this, SLOT(Close()));
     connect(m_Ok, SIGNAL(Clicked()), this, SLOT(onEditCompleted()));
 
     BuildFocusList();
     SetFocusWidget(m_HostEdit);
 
     QString host = gCoreContext->GetSetting("mpd-host", "localhost");
-    int port = gCoreContext->GetSetting("mpd-port", "6600").toInt();
+    QString port = gCoreContext->GetSetting("mpd-port", "6600");
     QString pass = gCoreContext->GetSetting("mpd-pass", "");
+
+    m_HostEdit->SetText(host);
+    m_PortEdit->SetText(port);
+    m_PassEdit->SetText(pass);
 
     LOG_("created...");
     return true;
 }
 
 void MpcConf::onEditCompleted(){
+    gCoreContext->SaveSetting("mpd-host", m_HostEdit->GetText());
+    gCoreContext->SaveSetting("mpd-port", m_PortEdit->GetText());
+    gCoreContext->SaveSetting("mpd-pass", m_PassEdit->GetText());
     LOG_("save..");
+    Close();
 }

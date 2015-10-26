@@ -10,7 +10,7 @@
             <fill color="Green" alpha="30" />
         </shape>
 
-        <textarea name="title">
+        <textarea name="heading">
             <area>10,10,100%-10,100</area>
             <font>baseextralarge</font>
             <align>allcenter</align>
@@ -23,42 +23,79 @@
             <align>vcenter,right</align>
         </clock>
 
-        <textarea name="infotext">
-            <area>10,100%-150,100%-10,100</area>
-            <font>basemedium</font>
-            <multiline>true</multiline>
-            <align>allcenter</align>
-        </textarea>
-
         <button name="previous" from="basebutton">
-            <area>290,100%-50,120,40</area>
-            <value>Previous</value>
+            <area>20,120,240,40</area>
+            <value>&lt;&lt; Previous</value>
         </button>
         <button name="play_pause" from="basebutton">
-            <area>470,100%-50,120,40</area>
+            <area>280,120,240,40</area>
             <value>Play</value>
         </button>
-        <button name="next" from="basebutton">
-            <area>610,100%-50,120,40</area>
-            <value>Next</value>
-        </button>
         <button name="stop" from="basebutton">
-            <area>790,100%-50,120,40</area>
+            <area>540,120,240,40</area>
             <value>Stop</value>
+        </button>
+        <button name="next" from="basebutton">
+            <area>800,120,240,40</area>
+            <value>Next &gt;&gt;</value>
         </button>
 
         <button name="volume_up" from="basebutton">
-            <area>790,100%-300,120,40</area>
-            <value>+</value>
+            <area>20,180,240,40</area>
+            <value>vol +5</value>
         </button>
         <button name="volume_down" from="basebutton">
-            <area>1090,100%-300,120,40</area>
-            <value>-</value>
+            <area>280,180,240,40</area>
+            <value>vol -5</value>
         </button>
         <button name="config" from="basebutton">
-            <area>1090,100%-400,120,40</area>
+            <area>1090,80,120,40</area>
             <value>config</value>
         </button>
+        <textarea name="infotext">
+            <area>40,250,100%,100%</area>
+            <font>baseextralarge</font>
+            <multiline>true</multiline>
+            <template>
+                %ARTIST% || %TITLE%    || %song_elapsed_min%:%song_elapsed_sec% || %volume%%%
+            </template>
+        </textarea>
+
+        <!--
+        <textarea name="title">
+            <area>40,290,100%,100%</area>
+            <value>MythMpc</value>
+            <multiline>true</multiline>
+            <template>
+artist = %ARTIST%\n
+title = %TITLE%\n
+album = %ALBUM%\n
+track = %TRACK%\n
+song_total = %song_total%\n
+song_total_min = %song_total_min%\n
+song_total_sec = %song_total_sec%\n
+song_elapsed = %song_elapsed%\n
+song_elapsed_min = %song_elapsed_min%\n
+song_elapsed_sec = %song_elapsed_sec%\n
+file = %FILE%\n
+name = %NAME%\n
+date = %date%\n
+genre = %genre%\n
+composer = %composer%\n
+performer = %performer%\n
+disc = %disc%\n
+comment = %comment%\n
+albumartist = %albumartist%\n
+time = %time%\n
+pos = %pos%\n
+id = %id%\n
+playback = %playback%\n
+random = %random%\n
+volume = %volume%\n
+x-fade = %fade%\n
+            </template>
+        </textarea>
+        -->
     </window>
 
     <window name="mpc_config">
@@ -71,10 +108,11 @@
             <fill color="Green" alpha="30" />
         </shape>
 
-        <textarea name="title">
+        <textarea name="heading">
             <area>10,10,100%-10,100</area>
             <font>baseextralarge</font>
             <align>allcenter</align>
+            <value>MythMpc Configuration</value>
         </textarea>
 
         <clock name="current_time">
@@ -83,60 +121,45 @@
             <align>vcenter,right</align>
         </clock>
 
-        <textarea name="show_message_description">
-            <area>100,75,100%-100,30</area>
-            <align>vcenter</align>
-            <value>MPD Host</value>
+        <textarea name="host_description">
+            <area>0,250,50%-10,50</area>
+            <align>vcenter,right</align>
+            <font>basemedium</font>
+            <value>MPD Host:</value>
         </textarea>
 
         <textedit name="mpd_host" from="basetextedit"  >
-            <area>50,110,1180,80</area>
-            <statetype name="background">
-                <state name="active">
-                    <area>0,0,1180,80</area>
-                    <shape name="background" >
-                        <area>0,0,100%,100%</area>
-                        <type>roundbox</type>
-                        <cornerradius>4</cornerradius>
-                    </shape>
-
-                    <shape name="textbackground">
-                        <area>10,10,100%-10,100%-10</area>
-                        <type>roundbox</type>
-                        <cornerradius>4</cornerradius>
-                        <fill color="#FFFFFF" alpha="200" />
-                    </shape>
-                </state>
-                <state name="selected" from="active">
-                </state>
-                <state name="inactive" from="active" />
-            </statetype>
-            <imagetype name="cursor">
-                <filename>cursor.png</filename>
-            </imagetype>
-            <textarea name="text">
-                <area>13,13,100%-13,100%-13</area>
-                <font>basesmallblack</font>
-                <multiline>true</multiline>
-            </textarea>
+            <area>50%+10,250,50%-25,40</area>
         </textedit>
+
+        <textarea name="port_description">
+            <area>0,310,50%-10,50</area>
+            <align>vcenter,right</align>
+            <font>basemedium</font>
+            <value>MPD Port:</value>
+        </textarea>
 
         <textedit name="mpd_port" from="basetextedit">
-            <area>50,520,50%-25,40</area>
+            <area>50%+10,310,50%-10,40</area>
         </textedit>
 
+        <textarea name="pass_description">
+            <area>0,370,50%-10,50</area>
+            <align>vcenter,right</align>
+            <font>basemedium</font>
+            <value>MPD Password:</value>
+        </textarea>
+
         <textedit name="mpd_pass" from="basetextedit">
-            <area>50,620,50%-25,40</area>
+            <area>50%+10,370,50%-25,40</area>
         </textedit>
 
         <button name="ok" from="basebutton">
-            <area>300,100%-50,160,40</area>
-            <value>OK</value>
+            <area>50%+10,430,100,40</area>
+            <value>Save</value>
         </button>
-
-
         <button name="cancel" from="basebutton">
-            <area>860,100%-50,120,40</area>
+            <area>50%+190,430,50%-10,40</area>
             <value>Cancel</value>
         </button>
 </window>

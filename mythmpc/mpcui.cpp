@@ -18,25 +18,36 @@
 #include "mpcui.h"
 #include "mpcconf.h"
 
+Mpc *gMythMpc = NULL;
+
 Mpc::Mpc(MythScreenStack *parent):
     MythScreenType(parent, "mpc"),
     m_Stop(NULL),
     m_PlayPause(NULL),
     m_Next(NULL),
     m_Prev(NULL),
+    m_Config(NULL),
     m_InfoText(NULL),
     m_TitleText(NULL),
     m_ButtonList(NULL),
     m_Mpc(NULL),
     m_PollTimer(NULL),
-    m_PollTimeout(1500),
+    m_PollTimeout(50),
+    m_VolUpDownStep(5),
     m_VolUp(NULL),
-    m_VolDown(NULL),
-    m_VolUpDownStep(5)
+    m_VolDown(NULL)
 {
+    gMythMpc = this;
 }
-
-void mpc_error_callback(MpdObj *mi,int errorid, char *msg, void *userdata)
+Mpc::~Mpc()
+{
+    if (m_Mpc){
+        mpd_free(m_Mpc);
+        m_Mpc = NULL;
+    }
+    gMythMpc = NULL;
+}
+void mpc_error_callback(MpdObj * /* mi */,int errorid, char *msg, void * /*userdata*/)
 {
    LOG_RX(QString ("ERROR '%1': %2").arg(errorid).arg(msg));
 }
@@ -70,52 +81,118 @@ QString Mpc::whatToString(ChangedStatusType w){
     return r + "|";
 }
 
+void Mpc::updateSongInfo(){
+        mpd_Song *song = mpd_playlist_get_current_song(m_Mpc);
+        if(!song)
+            return;
+
+        QString playing(song->artist);
+        updateInfo("file",  song->file);
+        updateInfo("artist",  song->artist);
+        updateInfo("title",  song->title);
+        updateInfo("album",  song->album);
+        updateInfo("track",  song->track);
+        updateInfo("name",  song->name);
+        updateInfo("date",  song->date);
+        updateInfo("genre",  song->genre);
+        updateInfo("composer",  song->composer);
+        updateInfo("performer",  song->performer);
+        updateInfo("disc", song->disc);
+        updateInfo("comment",  song->comment);
+        updateInfo("albumartist",  song->albumartist);
+        updateInfo("time",QString::number(song->time));
+        updateInfo("pos", QString::number(song->pos));
+        updateInfo("id",  QString::number(song->id));
+}
+
+void Mpc::updatePlaybackState(){
+    switch(mpd_player_get_state(m_Mpc))
+    {
+        case MPD_PLAYER_PLAY:
+            updateInfo("playback", "Playing");
+            break;
+        case MPD_PLAYER_PAUSE:
+            updateInfo("playback", "Paused");
+            break;
+        case MPD_PLAYER_STOP:
+            updateInfo("playback", "Stopped");
+            break;
+        default:
+            break;
+    }
+}
+
+void Mpc::updateInfo(QString key, QString value){
+    if (stateInfo[key] == value)
+        return;
+
+    LOG_RX(key + ": '" + stateInfo[key] + "' => '" + value + "'");
+    stateInfo[key] = value;
+    updateUi();
+}
+
+void Mpc::updateUi(){
+    if (stateInfo["playback"] == "Stopped" || stateInfo["playback"] == "Paused")
+        m_PlayPause->SetText(tr("Play"));
+    else
+        m_PlayPause->SetText(tr("Pause"));
+
+    if(m_TitleText)
+        m_TitleText->SetTextFromMap(stateInfo);
+    if (m_InfoText)
+        m_InfoText->SetTextFromMap(stateInfo);
+
+//    LOG_("UI Update");
+//    QList<MythUIText *> allText = findChildren<MythUIText *>();
+//    foreach(MythUIText* t, allText){
+//        //if (t != 0)
+//            //LOG_TX(t->objectName() + " (" + t->metaObject()->className() +")");
+//    }
+//    LOG_("UI Update ende \n");
+}
+
 void mpc_status_changed(MpdObj *mi, ChangedStatusType what)
 {
-    if (what == MPD_CST_ELAPSED_TIME)
-    {
+    if (gMythMpc == NULL)
         return;
-    }
-    LOG_RX(Mpc::whatToString(what));
-    QString str;
+
     if(what&MPD_CST_SONGID)
-    {
-        mpd_Song *song = mpd_playlist_get_current_song(mi);
-        if(song)
-        {
-            LOG_RX(QString("Song: %1 - %2\n").arg(song->artist).arg(song->title));
-        }
-    }
+        gMythMpc->updateSongInfo();
 
     if(what&MPD_CST_STATE)
-    {
-        switch(mpd_player_get_state(mi))
-        {
-            case MPD_PLAYER_PLAY:
-                LOG_RX("Playing");
-                break;
-            case MPD_PLAYER_PAUSE:
-                LOG_RX("Paused");
-                break;
-            case MPD_PLAYER_STOP:
-                LOG_RX("Stopped");
-                break;
-            default:
-                break;
-        }
-    }
+        gMythMpc->updatePlaybackState();
 
     if(what&MPD_CST_REPEAT)
-        LOG_RX(QString("Repeat: %1").arg(mpd_player_get_repeat(mi)? "On":"Off"));
+        gMythMpc->updateInfo("repeat", (mpd_player_get_repeat(mi)? "On":"Off"));
 
     if(what&MPD_CST_RANDOM)
-        LOG_RX(QString("Random: %1").arg( mpd_player_get_random(mi)? "On":"Off"));
+        gMythMpc->updateInfo("random", (mpd_player_get_random(mi)? "On":"Off"));
 
     if(what&MPD_CST_VOLUME)
-        LOG_RX(QString("Volume: %1%%").arg(mpd_status_get_volume(mi)));
+        gMythMpc->updateInfo("volume", QString::number((mpd_status_get_volume(mi))));
 
     if(what&MPD_CST_CROSSFADE)
-        LOG_RX(QString("X-Fade: %1 sec.").arg(mpd_status_get_crossfade(mi)));
+        gMythMpc->updateInfo ("x-fade", QString::number(mpd_status_get_crossfade(mi)));
+
+    if(what&MPD_CST_TOTAL_TIME)
+    {
+        int total = mpd_status_get_total_song_time(mi);
+        gMythMpc->updateInfo("song_total", QString::number(total));
+        gMythMpc->updateInfo("song_total_min", QString("%1").arg(total/60, 2, 10, QChar('0')));
+        gMythMpc->updateInfo("song_total_sec", QString("%1").arg(total%60, 2, 10, QChar('0')));
+    }
+
+    if(what&MPD_CST_ELAPSED_TIME){
+        int elapsed = mpd_status_get_elapsed_song_time(mi);
+        gMythMpc->updateInfo("song_elapsed", QString::number(elapsed));
+        gMythMpc->updateInfo("song_elapsed_min", QString("%1").arg(elapsed/60, 2, 10, QChar('0')));
+        gMythMpc->updateInfo("song_elapsed_sec", QString("%1").arg(elapsed%60, 2, 10, QChar('0')));
+    }
+
+    if(what&MPD_CST_BITRATE){
+        gMythMpc->updateInfo("bits", QString::number(
+                    mpd_status_get_bits(mi)));
+    }
 
     if(what&MPD_CST_UPDATING)
     {
@@ -128,25 +205,22 @@ void mpc_status_changed(MpdObj *mi, ChangedStatusType what)
         LOG_RX("Databased changed");
 
     if(what&MPD_CST_PLAYLIST)
+    {
         LOG_RX("Playlist changed");
+        gMythMpc->updateSongInfo();
+    }
 
     /* not yet implemented signals */
     if(what&MPD_CST_AUDIO)
         LOG_RX("Audio Changed");
 
-    if(what&MPD_CST_TOTAL_TIME)
-        LOG_RX(QString("Total song time changed: %1:%2")
-                .arg(mpd_status_get_total_song_time(mi)/60)
-                .arg(mpd_status_get_total_song_time(mi)%60));
-
-        if(what&MPD_CST_PERMISSION)
-            LOG_RX("Permission: Changed");
-        if(what&MPD_CST_ELAPSED_TIME){
-            /*              LOG_TX("Time elapsed changed:"RESET" %02i:%02i\n",
-                            mpd_status_get_elapsed_song_time(mi)/60,
-                            mpd_status_get_elapsed_song_time(mi)%60);
-                            */
-        }
+    if(what&MPD_CST_PERMISSION)
+        LOG_RX("Permission: Changed");
+    if(what&MPD_CST_ELAPSED_TIME){
+        /*LOG_TX("Time elapsed changed:"RESET" %02i:%02i\n",
+          mpd_status_get_elapsed_song_time(mi)/60,
+          mpd_status_get_elapsed_song_time(mi)%60); */
+    }
 }
 
 bool Mpc::create(void)
@@ -202,14 +276,16 @@ bool Mpc::create(void)
     int port = gCoreContext->GetSetting("mpd-port", "6600").toInt();
     QString pass = gCoreContext->GetSetting("mpd-pass", "");
 
+
+    m_Mpc = mpd_new((char*) host.toLatin1().data(),port, (char*)pass.toLatin1().data());
+    mpd_signal_connect_error(m_Mpc,(ErrorCallback) mpc_error_callback , NULL);
+    mpd_signal_connect_status_changed(m_Mpc, (StatusChangedCallback) mpc_status_changed, NULL);
+    mpd_set_connection_timeout(m_Mpc, 10);
+    mpd_connect(m_Mpc);
+
     m_PollTimer = new QTimer(this);
     connect(m_PollTimer, SIGNAL(timeout()), this, SLOT(poll()));
     m_PollTimer->start(m_PollTimeout);
-    m_Mpc = mpd_new((char*) host.toLatin1().data(),port, (char*)pass.toLatin1().data());
-    mpd_signal_connect_error(m_Mpc,(ErrorCallback) mpc_error_callback , NULL);
-    mpd_signal_connect_status_changed(m_Mpc,(StatusChangedCallback)mpc_status_changed, NULL);
-    mpd_set_connection_timeout(m_Mpc, 10);
-    mpd_connect(m_Mpc);
 
     LOG_("created...");
     return true;
