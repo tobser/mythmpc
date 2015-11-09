@@ -31,10 +31,10 @@ static void setupKeys(void)
 
 int mythplugin_init(const char *libversion)
 {
-//    if (!gCoreContext->TestPluginVersion("mythmpc",
-//        libversion, MYTH_BINARY_VERSION))
-//        return -1;
-//
+    if (!gCoreContext->TestPluginVersion("mythmpc",
+        libversion, MYTH_BINARY_VERSION))
+        return -1;
+
     setupKeys();
     LOG_M(LOG_INFO, "mpc plugin started.");
     return 0;
