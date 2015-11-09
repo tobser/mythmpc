@@ -1,101 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mythuitheme SYSTEM "http://www.mythtv.org/schema/mythuitheme.dtd">
+
 <mythuitheme>
-    <window name="mpc">
-        <area>0,0,100%,100%</area>
-        <shape name="background">
-            <area>0,0,100%,100%,</area>
-            <type>roundbox</type>
-            <cornerradius>10</cornerradius>
-            <line color="#FFFFFF" alpha="255" width="1" />
-            <fill color="Green" alpha="30" />
+    <window name="mpc"  include="music-base.xml">
+        <shape name="playlist_background" from="basebackground">
+            <area>15,15,770,350</area>
         </shape>
 
-        <textarea name="heading">
-            <area>10,10,100%-10,100</area>
-            <font>baseextralarge</font>
-            <align>allcenter</align>
-            <value>MythMpc</value>
-        </textarea>
 
-        <clock name="time">
-            <area>780,5,480,40</area>
-            <template>%TIME%</template>
-            <align>vcenter,right</align>
-        </clock>
+        <buttonlist name="currentplaylist" from="basecurrentplaylist">
+            <position>25,25</position>
+            <searchposition>-1,365</searchposition>
+        </buttonlist>
 
-        <button name="previous" from="basebutton">
-            <area>20,120,240,40</area>
-            <value>&lt;&lt; Previous</value>
-        </button>
-        <button name="play_pause" from="basebutton">
-            <area>280,120,240,40</area>
-            <value>Play</value>
-        </button>
-        <button name="stop" from="basebutton">
-            <area>540,120,240,40</area>
-            <value>Stop</value>
-        </button>
-        <button name="next" from="basebutton">
-            <area>800,120,240,40</area>
-            <value>Next &gt;&gt;</value>
-        </button>
-
-        <button name="volume_up" from="basebutton">
-            <area>20,180,240,40</area>
-            <value>vol +5</value>
-        </button>
-        <button name="volume_down" from="basebutton">
-            <area>280,180,240,40</area>
-            <value>vol -5</value>
-        </button>
-        <button name="config" from="basebutton">
-            <area>1090,80,120,40</area>
-            <value>config</value>
-        </button>
-        <textarea name="infotext">
-            <area>40,250,100%,100%</area>
-            <font>baseextralarge</font>
-            <multiline>true</multiline>
-            <template>
-                %ARTIST% || %TITLE%    || %song_elapsed_min%:%song_elapsed_sec% || %volume%%%
-            </template>
-        </textarea>
-
-        <!--
-        <textarea name="title">
-            <area>40,290,100%,100%</area>
-            <value>MythMpc</value>
-            <multiline>true</multiline>
-            <template>
-artist = %ARTIST%\n
-title = %TITLE%\n
-album = %ALBUM%\n
-track = %TRACK%\n
-song_total = %song_total%\n
-song_total_min = %song_total_min%\n
-song_total_sec = %song_total_sec%\n
-song_elapsed = %song_elapsed%\n
-song_elapsed_min = %song_elapsed_min%\n
-song_elapsed_sec = %song_elapsed_sec%\n
-file = %FILE%\n
-name = %NAME%\n
-date = %date%\n
-genre = %genre%\n
-composer = %composer%\n
-performer = %performer%\n
-disc = %disc%\n
-comment = %comment%\n
-albumartist = %albumartist%\n
-time = %time%\n
-pos = %pos%\n
-id = %id%\n
-playback = %playback%\n
-random = %random%\n
-volume = %volume%\n
-x-fade = %fade%\n
-            </template>
-        </textarea>
-        -->
+        <group name="infopanel" from="baseinfopanel">
+            <area>0,370,1250,260</area>
+        </group>
     </window>
 
     <window name="mpc_config">

@@ -1,1 +1,1 @@
-/usr//include/mythtv/mythconfig.mak
+/usr/include/mythtv/mythconfig.mak
