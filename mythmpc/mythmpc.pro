@@ -1,6 +1,9 @@
 include ( ../mythconfig.mak )
 include ( ../libs.pro )
 
+QMAKE_CXXFLAGS -= -Wall
+QMAKE_CXXFLAGS += -Werror -Wextra
+
 QT += network xml sql widgets
 TEMPLATE = lib
 CONFIG += debug plugin 

@@ -11,8 +11,9 @@
 #include <mythtv/libmythui/mythuiimage.h>
 #include <mythtv/libmythui/mythuiprogressbar.h>
 #include <QTimer>
-#include <libmpd-1.0/libmpd/libmpd.h>
-#include <libmpd-1.0/libmpd/debug_printf.h>
+// #include <libmpd-1.0/libmpd/libmpd.h>
+// #include <libmpd-1.0/libmpd/debug_printf.h>
+#include <mpd/client.h>
 
 #ifndef _LOG
 
@@ -29,12 +30,12 @@ class Mpc : public MythScreenType
     Q_OBJECT
 
     friend class MpcVolumeDialog;
+    friend class MpcConf;
 
     public:
         Mpc(MythScreenStack *parent);
         ~Mpc();
         bool create(void);
-        static QString whatToString(ChangedStatusType);
         InfoMap stateInfo;
         void updateSongInfo();
         void updatePlaylist();
@@ -50,6 +51,7 @@ class Mpc : public MythScreenType
 
     protected:
         bool keyPressEvent(QKeyEvent *e);
+        bool connectToMpd();
 
     private slots:
         void stop();
@@ -77,37 +79,41 @@ class Mpc : public MythScreenType
         bool isStopped(void){ return stateInfo["trackstate"] == "stopped"; }
         bool isPaused(void){ return stateInfo["trackstate"] == "paused"; }
         void updatePlaylistSongStates();
+        QString getTag(mpd_tag_type tag, mpd_song* song);
 
-        MpdObj           *m_Mpc;
-        QTimer           *m_PollTimer;
-        int               m_PollTimeout;
-        int               m_VolUpDownStep;
-        int               m_VolumeBeforeMute;
-        int               m_IsMute;
-        mpd_Song         *m_CurrentSong;
+        mpd_connection *m_Mpc;
+        QTimer         *m_PollTimer;
+        int             m_PollTimeout;
+        int             m_VolUpDownStep;
+        int             m_VolumeBeforeMute;
+        int             m_Volume;
+        int             m_IsMute;
+        mpd_song       *m_CurrentSong;
+        unsigned        m_CurrentSongPos;
+        unsigned        m_knownQueueVersion;
 
         // ui
-        MythUIButton     *m_StopBtn;
-        MythUIButton     *m_PlayBtn;
-        MythUIButton     *m_PauseBtn;
-        MythUIButton     *m_NextBtn;
-        MythUIButton     *m_PrevBtn;
-        MythUIButton     *m_RewBtn;
-        MythUIButton     *m_FfBtn;
-        MythUIButton     *m_ConfigBtn;
-        MythUIText       *m_TitleText;
-        MythUIText       *m_TimeText;
-        MythUIText       *m_InfoText;
-        MythUIText       *m_ArtistText;
-        MythUIProgressBar     *m_TrackProgress;
-        MythUIText            *m_TrackProgressText;
-        MythUIStateType       *m_TrackState;
-        MythUIStateType       *m_MuteState;
-        MythUIStateType       *m_RatingState;
-        MythUIText            *m_VolumeText;
-        MythUIImage           *m_CoverartImage;
-        MpcVolumeDialog       *m_VolumeDialog;
-        MythUIButtonList      *m_Playlist;
+        MythUIButton       *m_StopBtn;
+        MythUIButton       *m_PlayBtn;
+        MythUIButton       *m_PauseBtn;
+        MythUIButton       *m_NextBtn;
+        MythUIButton       *m_PrevBtn;
+        MythUIButton       *m_RewBtn;
+        MythUIButton       *m_FfBtn;
+        MythUIButton       *m_ConfigBtn;
+        MythUIText         *m_TitleText;
+        MythUIText         *m_TimeText;
+        MythUIText         *m_InfoText;
+        MythUIText         *m_ArtistText;
+        MythUIProgressBar  *m_TrackProgress;
+        MythUIText         *m_TrackProgressText;
+        MythUIStateType    *m_TrackState;
+        MythUIStateType    *m_MuteState;
+        MythUIStateType    *m_RatingState;
+        MythUIText         *m_VolumeText;
+        MythUIImage        *m_CoverartImage;
+        MpcVolumeDialog    *m_VolumeDialog;
+        MythUIButtonList   *m_Playlist;
 
 };
 

@@ -14,7 +14,7 @@ class MpcConf : public MythScreenType
     Q_OBJECT
 
     public:
-        MpcConf(MythScreenStack *parent);
+        MpcConf(MythScreenStack *parent, Mpc* mpc);
         bool create(void);
 
     private slots:
@@ -26,6 +26,7 @@ class MpcConf : public MythScreenType
         MythUITextEdit   *m_HostEdit;
         MythUITextEdit   *m_PortEdit;
         MythUITextEdit   *m_PassEdit;
+        Mpc              *m_MpcUi;
 };
 
 #endif /* MYTHTEATIME_UI_H*/

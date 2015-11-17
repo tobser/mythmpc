@@ -15,16 +15,16 @@
 // MythMpc headers
 #include "mpcconf.h"
 
-MpcConf::MpcConf(MythScreenStack *parent):
+MpcConf::MpcConf(MythScreenStack *parent, Mpc * mpcui):
     MythScreenType(parent, "mpcconf"),
        m_Ok(NULL),
        m_Cancel(NULL),
        m_HostEdit(NULL),
        m_PortEdit(NULL),
-       m_PassEdit(NULL)
+       m_PassEdit(NULL),
+       m_MpcUi(mpcui)
 {
 }
-
 
 bool MpcConf::create(void)
 {
@@ -73,4 +73,5 @@ void MpcConf::onEditCompleted(){
     gCoreContext->SaveSetting("mpd-pass", m_PassEdit->GetText());
     LOG_("save..");
     Close();
+    m_MpcUi->connectToMpd();
 }
