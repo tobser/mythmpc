@@ -252,6 +252,7 @@ bool Mpc::create(void){
     }
 
     BuildFocusList();
+    SetFocusWidget(m_StopBtn);
 
     m_PollTimer = new QTimer(this);
     connect(m_PollTimer, SIGNAL(timeout()), this, SLOT(poll()));
