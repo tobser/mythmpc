@@ -503,11 +503,11 @@ void Mpc::prev(){
 }
 
 void Mpc::volUp(){
-    changeVolume(+m_VolUpDownStep);
+    changeVolume(m_Volume + m_VolUpDownStep);
 }
 
 void Mpc::volDown(){
-    changeVolume(-m_VolUpDownStep);
+    changeVolume(m_Volume - m_VolUpDownStep);
 }
 
 void Mpc::toggleMute(){
@@ -545,21 +545,14 @@ int Mpc::getVolume(){
 }
 
 void Mpc::changeVolume(int vol){
-    int current = getVolume();
-    if (current < 0) return;
-
-    int newVol = 0;
-    if (vol != 0)
-        newVol = current + vol;
-
-    if (newVol > 100) newVol = 100;
-    if (newVol < 0) newVol = 0;
-    if (current == newVol)
+    if (vol > 100) vol = 100;
+    if (vol < 0) vol = 0;
+    if (m_Volume == vol)
         return;
 
-    LOG_TX(QString("Volume %1%% => %2%%").arg(current).arg(newVol));
-    mpd_run_set_volume(m_Mpc, newVol);
-    updateInfo("volumepercent", QString("%1").arg(newVol));
+    LOG_TX(QString("Volume %1%% => %2%%").arg(m_Volume).arg(vol));
+    mpd_run_set_volume(m_Mpc, vol);
+    updateInfo("volumepercent", QString("%1").arg(vol));
     setMute(false);
     poll();
     showVolume();
