@@ -252,13 +252,19 @@ bool Mpc::create(void){
     }
 
     BuildFocusList();
-    SetFocusWidget(m_StopBtn);
 
     m_PollTimer = new QTimer(this);
     connect(m_PollTimer, SIGNAL(timeout()), this, SLOT(poll()));
 
-    if (connectToMpd())
-        updatePlaylist();
+    SetFocusWidget(m_StopBtn);
+    if (connectToMpd()) {
+        poll();
+
+        QString ts = stateInfo["trackstate"];
+        if ( ts == "paused" || ts == "stopped") {
+            SetFocusWidget(m_PlayBtn);
+        }
+    }
 
     LOG_("created...");
     return true;
