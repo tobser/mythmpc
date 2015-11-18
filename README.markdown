@@ -3,7 +3,7 @@
 ## Features
 
 ## Installation
-
+    apt-get install libmpdclient-dev
     git clone git://github.com/tobser/mythmpc.git
     cd mythmpc
     ./configure
