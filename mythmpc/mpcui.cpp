@@ -59,6 +59,7 @@ Mpc::~Mpc(){
 }
 
 void Mpc::updatePlaylist(){
+    LOG_("reloading playlist");
     int pivot = m_CurrentSongPos;
     int cntElementsBeforAndAfter= 20;
     int start = pivot - cntElementsBeforAndAfter;
@@ -355,6 +356,8 @@ bool Mpc::keyPressEvent(QKeyEvent *e)
 }
 
 void Mpc::poll(){
+    QElapsedTimer t;
+    t.start();
     m_PollTimer->stop();
     bool reloadPlaylist = false;
     struct mpd_status *s;
@@ -428,6 +431,9 @@ void Mpc::poll(){
     if (reloadPlaylist)
         updatePlaylist();
 
+    int elapsed = t.elapsed();
+    if (elapsed > 5)
+        LOG_(QString("Poll took %1").arg(elapsed));
     m_PollTimer->start(m_PollTimeout);
 }
 
