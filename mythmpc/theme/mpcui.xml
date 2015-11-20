@@ -3,10 +3,10 @@
 
 <mythuitheme>
     <window name="mpc"  include="music-base.xml">
-        <shape name="playlist_background" from="basebackground">
-            <area>15,15,770,350</area>
-        </shape>
 
+        <shape name="playlist_background" from="basebackground">
+            <area>15,15,1250,410</area>
+        </shape>
 
         <buttonlist name="currentplaylist" from="basecurrentplaylist">
             <position>25,25</position>
@@ -14,7 +14,7 @@
         </buttonlist>
 
         <group name="infopanel" from="baseinfopanel">
-            <area>0,370,1250,260</area>
+            <area>0,445,1250,260</area>
         </group>
     </window>
 
