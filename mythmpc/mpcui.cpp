@@ -39,8 +39,6 @@ Mpc::Mpc(MythScreenStack *parent): MythScreenType(parent, "mpc"),
     m_TimeText(NULL),
     m_InfoText(NULL),
     m_TrackProgress(NULL),
-    m_TrackProgressText(NULL),
-    m_TrackState(NULL),
     m_MuteState(NULL),
     m_RatingState(NULL),
     m_VolumeText(NULL),
@@ -210,12 +208,10 @@ bool Mpc::create(void){
 
     UIUtilE::Assign(this, m_TitleText, "title");
     UIUtilE::Assign(this, m_TimeText, "time", &err);
-    UIUtilE::Assign(this, m_InfoText, "info");
+    UIUtilW::Assign(this, m_InfoText, "nexttitle");
     UIUtilE::Assign(this, m_ArtistText, "artist");
     UIUtilE::Assign(this, m_RatingState, "ratingstate", &err);
     UIUtilE::Assign(this, m_TrackProgress, "progress", &err);
-    UIUtilE::Assign(this, m_TrackProgressText, "trackprogress");
-    UIUtilE::Assign(this, m_TrackState, "trackstate", &err);
     UIUtilE::Assign(this, m_VolumeText, "volume", &err);
     UIUtilE::Assign(this, m_MuteState, "mutestate", &err);
     UIUtilE::Assign(this, m_PrevBtn, "prev", &err);

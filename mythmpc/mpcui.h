@@ -104,7 +104,6 @@ class Mpc : public MythScreenType
         MythUIText         *m_InfoText;
         MythUIText         *m_ArtistText;
         MythUIProgressBar  *m_TrackProgress;
-        MythUIText         *m_TrackProgressText;
         MythUIStateType    *m_TrackState;
         MythUIStateType    *m_MuteState;
         MythUIStateType    *m_RatingState;
