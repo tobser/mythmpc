@@ -65,6 +65,8 @@ class Mpc : public MythScreenType
         void displayMpdConnError(QAbstractSocket::SocketError socketError);
         void poll();
         void openConfigWindow();
+        void songMetaToInfoMap(mpd_song* s, InfoMap* m);
+        void onQueueItemClicked(MythUIButtonListItem* item);
 
     private:
         void changeVolume(int volChange);

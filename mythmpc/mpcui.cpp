@@ -58,36 +58,66 @@ Mpc::~Mpc(){
 
 void Mpc::updatePlaylist(){
     LOG_("reloading playlist");
-    int pivot = m_CurrentSongPos;
-    int cntElementsBeforAndAfter= 20;
-    int start = pivot - cntElementsBeforAndAfter;
-    if (start < 0)
-        start = 0;
-    int  stop = pivot +cntElementsBeforAndAfter ;
+    m_Playlist->Reset();
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
+    //    int pivot = m_CurrentSongPos;
+    //    int cntElementsBeforAndAfter= 20;
+    //    int start = pivot - cntElementsBeforAndAfter;
+    //    if (start < 0)
+    //        start = 0;
+    //    int  stop = pivot +cntElementsBeforAndAfter ;
+    //
+    //    if(!mpd_send_list_queue_range_meta(m_Mpc, start, stop))
+    //        return;
 
-    if(!mpd_send_list_queue_range_meta(m_Mpc, start, stop))
+    if(!mpd_send_list_queue_meta(m_Mpc))
         return;
 
-    m_Playlist->Reset();
+    unsigned nextSongPos = m_CurrentSongPos+1;
+
+    LOG_(QString("nextSong: %1").arg(nextSongPos));
     mpd_song *song;
     while ((song = mpd_recv_song(m_Mpc)) != NULL) {
         InfoMap mdata;
-        unsigned pos = mpd_song_get_pos(song);
-        mdata["uri"]    = mpd_song_get_uri(song);
-        mdata["pos"]    = pos;;
-        mdata["artist"] = getTag(MPD_TAG_ARTIST, song);
-        mdata["name"]   = getTag( MPD_TAG_NAME,  song);
-        mdata["title"]  = getTag( MPD_TAG_TITLE, song);
-        mdata["album"]  = getTag( MPD_TAG_ALBUM, song);
-        mdata["track"]  = getTag( MPD_TAG_TRACK, song);
-        mdata["date"]   = getTag( MPD_TAG_DATE,  song);
+        songMetaToInfoMap(song, &mdata);
+        LOG_(QString("%1 - %2 - %3")
+                .arg(mdata["pos"],2)
+                .arg(mdata["artist"])
+                .arg(mdata["title"]));
 
+        unsigned pos = mpd_song_get_pos(song);
         MythUIButtonListItem *item;
         item = new MythUIButtonListItem(m_Playlist, " ", qVariantFromValue(pos));
         item->SetTextFromMap(mdata);
+        if (nextSongPos == pos)
+        {
+            updateInfo("nexttitle", mdata["title"]);
+            updateInfo("nextartist", mdata["artist"]);
+        }
+
         mpd_song_free(song);
     }
     updatePlaylistSongStates();
+}
+
+void Mpc::songMetaToInfoMap(mpd_song* s, InfoMap* m){
+    unsigned pos = mpd_song_get_pos(s);
+    m->insert("uri", mpd_song_get_uri(s));
+    m->insert("pos"  , QString("%1").arg(pos));
+    m->insert("artist", getTag(MPD_TAG_ARTIST, s));
+    m->insert("name" , getTag( MPD_TAG_NAME,  s));
+    m->insert("title", getTag( MPD_TAG_TITLE, s));
+    m->insert("album", getTag( MPD_TAG_ALBUM, s));
+    m->insert("track", getTag( MPD_TAG_TRACK, s));
+    m->insert("date" , getTag( MPD_TAG_DATE,  s));
+    m->insert("genre",getTag(MPD_TAG_GENRE,s));
+
+    if (m->value("artist").isEmpty()){
+        m->insert("artist", m->value("name"));
+    }
 }
 
 void Mpc::updatePlaylistSongStates(){
@@ -146,7 +176,7 @@ void Mpc::updateInfo(QString key, QString value){
         return;
     }
 
-    if (key == "info" && m_InfoText){
+    if (key.startsWith("next") && m_InfoText){
         m_InfoText->SetTextFromMap(stateInfo);
         return;
     }
@@ -179,6 +209,7 @@ void Mpc::updateInfo(QString key, QString value){
     }
 
     if (key == "volumepercent"){
+        stateInfo["volume"] = stateInfo["volumepercent"];
         if (!value.startsWith("-"))
             m_VolumeText->SetTextFromMap(stateInfo);
 
@@ -223,7 +254,10 @@ bool Mpc::create(void){
     UIUtilE::Assign(this, m_NextBtn, "next", &err);
     UIUtilE::Assign(this, m_CoverartImage, "coverart", &err);
     UIUtilE::Assign(this, m_Playlist, "currentplaylist", &err);
-    m_Playlist->SetEnabled(false);
+    // m_Playlist->SetEnabled(false);
+
+    connect(m_Playlist, SIGNAL(itemClicked(MythUIButtonListItem *)),
+            this, SLOT(onQueueItemClicked(MythUIButtonListItem *)));
 
     connect(m_PrevBtn, SIGNAL(Clicked()), this, SLOT(prev()));
     connect(m_NextBtn, SIGNAL(Clicked()), this, SLOT(next()));
@@ -252,18 +286,21 @@ bool Mpc::create(void){
     m_PollTimer = new QTimer(this);
     connect(m_PollTimer, SIGNAL(timeout()), this, SLOT(poll()));
 
-    SetFocusWidget(m_StopBtn);
-    if (connectToMpd()) {
-        poll();
-
-        QString ts = stateInfo["trackstate"];
-        if ( ts == "paused" || ts == "stopped") {
-            SetFocusWidget(m_PlayBtn);
-        }
-    }
+    //SetFocusWidget(m_StopBtn);
+    connectToMpd();
 
     LOG_("created...");
     return true;
+}
+
+void Mpc::onQueueItemClicked(MythUIButtonListItem* item){
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
+    unsigned song_pos = item->GetData().toInt();
+    mpd_run_play_pos(m_Mpc,  song_pos);
+    poll();
 }
 
 bool Mpc::connectToMpd(){
@@ -296,8 +333,12 @@ bool Mpc::connectToMpd(){
         return false;
     }
 
-    if(m_PollTimer)
-        m_PollTimer->start(m_PollTimeout);
+    poll();
+    updatePlaylist();
+  //  QString ts = stateInfo["trackstate"];
+  //  if ( ts == "paused" || ts == "stopped") {
+  //      SetFocusWidget(m_PlayBtn);
+  //  }
 
     return true;
 }
@@ -359,6 +400,10 @@ bool Mpc::keyPressEvent(QKeyEvent *e)
 }
 
 void Mpc::poll(){
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
     QElapsedTimer t;
     t.start();
     m_PollTimer->stop();
@@ -404,12 +449,23 @@ void Mpc::poll(){
 
         updateInfo("progress", QString("%1").arg(progress));
 
-        unsigned currentQueueVers = mpd_status_get_queue_version(s);
+        // unsigned currentQueueVers = mpd_status_get_queue_version(s);
 
-        if (m_knownQueueVersion != currentQueueVers){
-            reloadPlaylist = true;
-            m_knownQueueVersion = currentQueueVers;
-        }
+        // if (m_knownQueueVersion != currentQueueVers){
+        //     LOG_(QString("queue version changed %1 => %2")
+        //             .arg(m_knownQueueVersion)
+        //             .arg(currentQueueVers));
+        //     mpd_send_queue_changes_brief(m_Mpc, m_knownQueueVersion);
+        //     unsigned position_r = 0;
+        //     unsigned id_r = 0;
+        //     while(mpd_recv_queue_change_brief(m_Mpc, &position_r, &id_r)) {
+        //         LOG_(QString("changed pos %1  id  %2")
+        //                 .arg(position_r)
+        //                 .arg(id_r));
+        //     }
+        //     m_knownQueueVersion = currentQueueVers;
+        //     reloadPlaylist = true;
+        // }
 
         mpd_status_free(s);
     }
@@ -417,12 +473,23 @@ void Mpc::poll(){
     struct mpd_song *song;
     song = mpd_run_current_song(m_Mpc);
     if (song != NULL) {
-        updateInfo("artist", getTag(MPD_TAG_ARTIST, song));
-        updateInfo("album", getTag( MPD_TAG_ALBUM, song));
-        updateInfo("title", getTag( MPD_TAG_TITLE, song));
-        updateInfo("track", getTag( MPD_TAG_TRACK, song));
-        updateInfo("name", getTag( MPD_TAG_NAME, song));
-        updateInfo("date", getTag( MPD_TAG_DATE, song));
+        InfoMap m;
+        songMetaToInfoMap(song, &m);
+        QHash<QString,QString>::iterator i;
+        for (i = m.begin(); i != m.end(); i++)
+            updateInfo(i.key(), i.value());
+
+        //   updateInfo("album", getTag( MPD_TAG_ALBUM, song));
+        //   updateInfo("title", getTag( MPD_TAG_TITLE, song));
+        //   updateInfo("track", getTag( MPD_TAG_TRACK, song));
+        //   updateInfo("name", getTag( MPD_TAG_NAME, song));
+        //   QString artist = getTag(MPD_TAG_ARTIST, song);
+        //   if (artist.isEmpty())
+        //       updateInfo("artist", stateInfo["name"]);
+        //   else
+        //       updateInfo("artist", artist);
+
+        //   updateInfo("date", getTag( MPD_TAG_DATE, song));
         unsigned pos = mpd_song_get_pos(song);
         if(pos != m_CurrentSongPos){
             reloadPlaylist = true;
@@ -617,7 +684,7 @@ QString Mpc::toMinSecString(int seconds){
         .arg(seconds%60, 2, 10, QChar('0'));
 }
 
-#define MPD_VOLUME_POPUP_TIME 4 * 1000
+#define MPD_VOLUME_POPUP_TIME 2 * 1000
 
 MpcVolumeDialog::MpcVolumeDialog(MythScreenStack *parent, const char *name, Mpc *mpc)
     : MythScreenType(parent, name, false),
