@@ -16,17 +16,13 @@
 
 #include "mpcui.h"
 
-#ifndef LOG_M
-#define LOG_M(level, message) LOG(VB_GENERAL, level, QString("MPC: %1") \
-                                    .arg(message))
-#endif
 static void openMpcScreen(void);
 static void setupKeys(void)
 {
     REG_JUMPEX(QT_TRANSLATE_NOOP("MythControls", "MPC"),
             "Open MPD Client Plugin", "" , openMpcScreen, false);
 
-    LOG_M(LOG_INFO, "Registered JumpPoint \"MPC\"");
+    LOG_("Registered JumpPoint \"MPC\"");
 }
 
 int mythplugin_init(const char *libversion)
@@ -36,7 +32,7 @@ int mythplugin_init(const char *libversion)
         return -1;
 
     setupKeys();
-    LOG_M(LOG_INFO, "mpc plugin started.");
+    LOG_("mpc plugin started.");
     return 0;
 }
 
@@ -60,14 +56,14 @@ static void openMpcScreen(void)
     MythScreenStack *st = GetMythMainWindow()->GetMainStack();
     if (!st)
     {
-        LOG_M(LOG_WARNING, "Could not get main stack.");
+        LOG_("Could not get main stack.");
         return;
     }
 
     QString result = st->GetLocation(true);
     if (result.contains("Playback"))
     {
-            LOG_M(LOG_INFO, "Can not create MPC UI while in playback.");
+            LOG_("Can not create MPC UI while in playback.");
             return;
     }
 
@@ -77,7 +73,7 @@ static void openMpcScreen(void)
     Mpc* mpc = new Mpc(st);
     if (!mpc->create())
     {
-        LOG_M(LOG_WARNING, "Could not create MPC UI.");
+        LOG_("Could not create MPC UI.");
         delete mpc;
         mpc = NULL;
         return;

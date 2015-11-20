@@ -122,7 +122,7 @@ void Mpc::updateInfo(QString key, QString value){
         return;
 
     if (key != "song_elapsed" && key != "progress")
-        LOG_RX(key + ": '" + stateInfo[key] + "' => '" + value + "'");
+        LOG_(key + ": '" + stateInfo[key] + "' => '" + value + "'");
 
     QString prev = stateInfo[key];
     stateInfo[key] = value;
@@ -322,7 +322,7 @@ bool Mpc::keyPressEvent(QKeyEvent *e)
     QStringList::const_iterator it;
     for (it = actions.constBegin(); it != actions.constEnd(); ++it) {
 
-        LOG_TX(QString("kPE: ") + *it);
+        LOG_(QString("kPE: ") + *it);
         if (*it == "VOLUMEUP") {
             volUp();
             return true;
@@ -449,7 +449,7 @@ QString Mpc::getTag(mpd_tag_type tag, mpd_song* song){
 }
 
 void Mpc::stop(){
-    LOG_TX("stop");
+    LOG_("stop");
     mpd_run_stop(m_Mpc);
     poll();
 }
@@ -479,25 +479,41 @@ void Mpc::togglePlay(){
 }
 
 void Mpc::play(){
-    LOG_TX("play");
+    LOG_("play");
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
     mpd_run_play(m_Mpc);
     poll();
 }
 
 void Mpc::pause(){
-    LOG_TX("pause");
+    LOG_("pause");
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
     mpd_run_pause(m_Mpc, true); // no clue what mode exactly should be..
     poll();
 }
 
 void Mpc::next(){
-    LOG_TX("next");
+    LOG_("next");
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
     mpd_run_next(m_Mpc);
     poll();
 }
 
 void Mpc::prev(){
-    LOG_TX("prev");
+    LOG_("prev");
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
     mpd_run_previous(m_Mpc);
     poll();
 }
@@ -545,12 +561,16 @@ int Mpc::getVolume(){
 }
 
 void Mpc::changeVolume(int vol){
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
     if (vol > 100) vol = 100;
     if (vol < 0) vol = 0;
     if (m_Volume == vol)
         return;
 
-    LOG_TX(QString("Volume %1%% => %2%%").arg(m_Volume).arg(vol));
+    LOG_(QString("Volume %1%% => %2%%").arg(m_Volume).arg(vol));
     mpd_run_set_volume(m_Mpc, vol);
     updateInfo("volumepercent", QString("%1").arg(vol));
     setMute(false);
@@ -669,6 +689,7 @@ bool MpcVolumeDialog::keyPressEvent(QKeyEvent *event) {
             m_Mpc->toggleMute();
             handled = true;
         }
+
     }
 
     if (!handled && MythScreenType::keyPressEvent(event))

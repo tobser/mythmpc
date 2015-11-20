@@ -17,10 +17,8 @@
 
 #ifndef _LOG
 
-#define _LOG(message) LOG(VB_GENERAL, LOG_WARNING, message)
-#define LOG_(message) _LOG(QString("MPC: ") + message)
-#define LOG_TX(message) _LOG(QString("MPC TX: ") + message)
-#define LOG_RX(message) _LOG(QString("MPC RX: ") + message)
+#define _LOG(message) LOG(VB_GENERAL, LOG_INFO, message)
+#define LOG_(message)   _LOG(QString("MPC: ") + message)
 
 #endif
 class MpcVolumeDialog;
