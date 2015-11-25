@@ -380,6 +380,12 @@ bool Mpc::keyPressEvent(QKeyEvent *e)
             return true;
         }
 
+        if (*it == "STOP" ){
+            stop();
+            return true;
+        }
+
+
         if (*it == "MUTE") {
             toggleMute();
             return true;
