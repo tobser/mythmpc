@@ -588,10 +588,14 @@ void Mpc::prev(){
 }
 
 void Mpc::volUp(){
+    if (m_IsMute)
+        toggleMute();
     changeVolume(m_Volume + m_VolUpDownStep);
 }
 
 void Mpc::volDown(){
+    if (m_IsMute)
+        toggleMute();
     changeVolume(m_Volume - m_VolUpDownStep);
 }
 
