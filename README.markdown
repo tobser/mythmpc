@@ -24,7 +24,10 @@ This plugin is of no use to you without MPD.
     sudo make install
 
 ## Setup
+### Configuration
+To configure MPD _host/port/password_: Start the plugin and press the menu button on your remote.
 
+### Add a Button
 Add a button to your library.xml menu (see the [Menu theme development
 guide](http://www.mythtv.org/wiki/Menu_theme_development_guide)):
 
@@ -36,10 +39,12 @@ guide](http://www.mythtv.org/wiki/Menu_theme_development_guide)):
         <depends>mythmpc</depends>
     </button>
 
-To configure MPD _host/port/password_: Start the plugin and press the menu button on your remote.
+### Or use Jumppoint 
+Assing a key on your remote to start mythmpc: `Setup`->`Edit Keys`->`JumpPonts`->`MPC`
 
-### automatically start plugin on start
-The following script needs `mpc` to check the current playback state of `mpd`
+### autostart mythmpc plugin if mpd is playing music
+To immediatly enter mythmpc if `mpd` is currently in playback you can use this shell script.
+The script needs `mpc` (`apt-get install mpc`) to check the current playback state of `mpd`
 
     #!/usr/bin/env bash
     
