@@ -10,6 +10,11 @@ This plugin is of no use to you without MPD.
 * jump to next/previous track
 * Volume up/down and mute
 
+## Not Working
+* Coverart images
+* loading/management of playlists
+* changing the current play queue
+
 ## Installation
     apt-get install libmpdclient-dev
     git clone git://github.com/tobser/mythmpc.git
@@ -32,3 +37,23 @@ guide](http://www.mythtv.org/wiki/Menu_theme_development_guide)):
     </button>
 
 To configure MPD _host/port/password_: Start the plugin and press the menu button on your remote.
+
+### automatically start plugin on start
+The following script needs `mpc` to check the current playback state of `mpd`
+
+    #!/usr/bin/env bash
+    
+    ##
+    ## checks the current state of mpd, if in playback mythmpc plugin is
+    ## laoded, else mythfrontend starts with live tv playback
+    ##
+    
+    frontend="/usr/bin/mythfrontend"
+    mpc="/usr/bin/mpc"
+    mpd_state=`$mpc -h mpd_host_name -p 6600 |grep "\[.*\]" | sed 's/\[\(.*\)\].*/\1/'`
+    
+    if [ "X$mpd_state" == "Xplaying" ]; then
+        ($frontend --runplugin "mpc")
+    else
+        ($frontend --jumppoint "Live TV")
+    fi
