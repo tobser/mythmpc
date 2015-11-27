@@ -1,0 +1,41 @@
+#!/bin/sh 
+
+sysroot=""
+ln_s="ln -sf"
+
+cc="gcc"
+qmake="qmake"
+
+# bring in mythtv config
+mythconfig=`find /usr/ -wholename "*/mythtv/mythconfig.mak"`
+if [ "x" != "x$mythconfig" -a  -e $mythconfig ] ; then
+    rm mythconfig.mak 2> /dev/null
+    ${ln_s} $mythconfig mythconfig.mak
+else
+    echo "ERROR: mythconfig.mak not found is 'libmyth-dev' installed?"
+    exit
+fi
+
+#Set build env variables according to mythconfig.mak
+LD=$(cat mythconfig.mak | grep -e "^LD=")
+LD=${LD#LD=}
+CC=$(cat mythconfig.mak | grep -e "^CC=")
+CC=${CC#CC=}
+CFLAGS=$(cat mythconfig.mak | grep -e "^CFLAGS=")
+CFLAGS=${CFLAGS#CFLAGS=}
+CPPFLAGS=$(cat mythconfig.mak | grep -e "^CPPFLAGS=")
+CPPFLAGS=${CPPFLAGS#CPPFLAGS=}
+LDFLAGS=$(cat mythconfig.mak | grep -e "^LDFLAGS=")
+LDFLAGS=${LDFLAGS#LDFLAGS=}
+CXX=$(cat mythconfig.mak | grep -e "^QMAKE_CXX=")
+CXX=${CXX#QMAKE_CXX=}
+ECXXFLAGS=$(cat mythconfig.mak | grep -e "^ECXXFLAGS=")
+ECXXFLAGS=${ECXXFLAGS#ECXXFLAGS=}
+CXXPPFLAGS=$(cat mythconfig.mak | grep -e "^CXXPPFLAGS=")
+CXXPPFLAGS=${CXXPPFLAGS#CXXPPFLAGS=}
+OPENGLV=$(cat mythconfig.mak | grep -e "^CONFIG_OPENGL_VIDEO=yes")
+
+EXTRALIBS=$(cat mythconfig.mak | grep -e "^EXTRALIBS=")
+EXTRALIBS=${EXTRALIBS#EXTRALIBS=}
+
+${qmake} QMAKE=$(which ${qmake}) mythmpc.pro

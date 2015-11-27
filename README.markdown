@@ -11,7 +11,6 @@ This plugin is of no use to you without MPD.
 * Volume up/down and mute
 
 ## Not Working
-* Coverart images
 * loading/management of playlists
 * changing the current play queue
 

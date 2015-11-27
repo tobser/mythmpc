@@ -80,6 +80,8 @@ class Mpc : public MythScreenType
         bool isPaused(void){ return stateInfo["trackstate"] == "paused"; }
         void updatePlaylistSongStates();
         QString getTag(mpd_tag_type tag, mpd_song* song);
+        void updateCoverArt();
+        QString getCoverArtUrl(QString uri, QString title);
 
         mpd_connection *m_Mpc;
         QTimer         *m_PollTimer;

@@ -83,10 +83,12 @@ void Mpc::updatePlaylist(){
     while ((song = mpd_recv_song(m_Mpc)) != NULL) {
         InfoMap mdata;
         songMetaToInfoMap(song, &mdata);
-        LOG_(QString("%1 - %2 - %3")
+        LOG_(QString("%1 - %2 - %3 - %4")
                 .arg(mdata["pos"],2)
                 .arg(mdata["artist"])
-                .arg(mdata["title"]));
+                .arg(mdata["title"])
+                .arg(mdata["uri"])
+                );
 
         unsigned pos = mpd_song_get_pos(song);
         MythUIButtonListItem *item;
@@ -98,6 +100,18 @@ void Mpc::updatePlaylist(){
             updateInfo("nextartist", mdata["artist"]);
         }
 
+        QString art_url =  getCoverArtUrl(mdata["uri"],  mdata["title"]);
+        mdata["coverart"] = art_url;
+        if (art_url.isEmpty()) {
+            item->SetImage("");
+            item->SetImage("", "coverart");
+        }
+        else {
+            item->SetImage(art_url);
+            item->SetImage(art_url, "coverart");
+        }
+        item->SetImage(mdata["coverart"], "coverart");
+
         mpd_song_free(song);
     }
     updatePlaylistSongStates();
@@ -105,7 +119,7 @@ void Mpc::updatePlaylist(){
 
 void Mpc::songMetaToInfoMap(mpd_song* s, InfoMap* m){
     unsigned pos = mpd_song_get_pos(s);
-    m->insert("uri", mpd_song_get_uri(s));
+    m->insert("uri",QString(mpd_song_get_uri(s)));
     m->insert("pos"  , QString("%1").arg(pos));
     m->insert("artist", getTag(MPD_TAG_ARTIST, s));
     m->insert("name" , getTag( MPD_TAG_NAME,  s));
@@ -441,7 +455,7 @@ void Mpc::poll(){
         int elapsed = mpd_status_get_elapsed_time(s);
         updateInfo("song_elapsed", toMinSecString(elapsed));
 
-        int total =mpd_status_get_total_time(s);
+        int total = mpd_status_get_total_time(s);
         updateInfo("song_total", toMinSecString(total));
         int progress = 0;
         if (total <= 0)
@@ -454,6 +468,7 @@ void Mpc::poll(){
             progress = ((float)elapsed/(float)total)*100;
 
         updateInfo("progress", QString("%1").arg(progress));
+
 
         // unsigned currentQueueVers = mpd_status_get_queue_version(s);
 
@@ -500,6 +515,7 @@ void Mpc::poll(){
         if(pos != m_CurrentSongPos){
             reloadPlaylist = true;
             m_CurrentSongPos = pos;
+            updateCoverArt();
         }
         mpd_song_free(song);
     }
@@ -515,6 +531,50 @@ void Mpc::poll(){
 
 QString Mpc::getTag(mpd_tag_type tag, mpd_song* song){
     return QString("%1").arg(mpd_song_get_tag(song, tag, 0));
+}
+
+QString Mpc::getCoverArtUrl(QString uri, QString title){
+    MSqlQuery query(MSqlQuery::InitCon());
+    query.prepare("SELECT song_id from `music_songs` WHERE `filename` = :FILENAME AND `name` = :NAME");
+
+    int idx = uri.lastIndexOf("/");
+    QString fname;
+    if (idx <= 0)
+        fname = uri;
+    else
+        fname = uri.mid(idx+1,uri.length());
+    query.bindValue(":FILENAME", fname );
+    query.bindValue(":NAME", title);
+
+    LOG_(QString("lockign for idx=%1 '").arg(idx) +uri );
+    LOG_("lockign for '" + fname + "'  '" + title);
+    if (!query.exec())
+    {
+        LOG_("Could not read timers from DB.");
+        return "";
+    }
+    while(query.next())
+    {
+        int songId = query.value(0).toInt();
+        QString url =  QString("http://127.0.0.1:6544/Content/GetAlbumArt?Id=%1").arg(songId);
+        LOG_("url: " + url);
+        return url;
+    }
+    return "";
+}
+
+void Mpc::updateCoverArt() {
+
+    QString url = getCoverArtUrl( stateInfo["uri"],  stateInfo["title"]);
+
+    if (url.isEmpty()){
+        LOG_("No Cover art found");
+        return;
+    }
+
+    LOG_(url);
+    m_CoverartImage->SetFilename(url);
+    m_CoverartImage->Load();
 }
 
 void Mpc::stop(){
