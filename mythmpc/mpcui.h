@@ -93,6 +93,8 @@ class Mpc : public MythScreenType
         mpd_song       *m_CurrentSong;
         unsigned        m_CurrentSongPos;
         unsigned        m_knownQueueVersion;
+        QString         m_MasterBackend;
+        int             m_MasterBackendPort;
 
         // ui
         MythUIButton       *m_StopBtn;

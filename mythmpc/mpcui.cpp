@@ -201,7 +201,6 @@ void Mpc::updateInfo(QString key, QString value){
     }
 
     if(key == "trackstate"){
-        LOG_("Setting lockstate...");
         if (value == "playing"){
             m_PlayBtn->SetLocked(true);
             m_PauseBtn->SetLocked(false);
@@ -241,6 +240,11 @@ void Mpc::updateInfo(QString key, QString value){
 
 
 bool Mpc::create(void){
+
+    m_MasterBackend     = gCoreContext->GetMasterServerIP();
+    m_MasterBackendPort = gCoreContext->GetMasterServerStatusPort();
+    LOG_(QString("master: %1:%2 ").arg(m_MasterBackend).arg(m_MasterBackendPort));
+
 
     bool foundtheme = false;
     foundtheme = LoadWindowFromXML("mpcui.xml", "mpc", this);
@@ -299,7 +303,6 @@ bool Mpc::create(void){
 
     m_PollTimer = new QTimer(this);
     connect(m_PollTimer, SIGNAL(timeout()), this, SLOT(poll()));
-
     //SetFocusWidget(m_StopBtn);
     connectToMpd();
 
