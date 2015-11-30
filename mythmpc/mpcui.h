@@ -66,7 +66,9 @@ class Mpc : public MythScreenType
         void poll();
         void openConfigWindow();
         void songMetaToInfoMap(mpd_song* s, InfoMap* m);
+        void mythmusicMetaToInfoMap(QString uri, QString title, InfoMap* m);
         void onQueueItemClicked(MythUIButtonListItem* item);
+        void onQueueItemVisible(MythUIButtonListItem* item);
 
     private:
         void changeVolume(int volChange);
@@ -80,8 +82,6 @@ class Mpc : public MythScreenType
         bool isPaused(void){ return stateInfo["trackstate"] == "paused"; }
         void updatePlaylistSongStates();
         QString getTag(mpd_tag_type tag, mpd_song* song);
-        void updateCoverArt();
-        QString getCoverArtUrl(QString uri, QString title);
 
         mpd_connection *m_Mpc;
         QTimer         *m_PollTimer;

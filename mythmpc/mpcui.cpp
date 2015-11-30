@@ -83,36 +83,25 @@ void Mpc::updatePlaylist(){
     while ((song = mpd_recv_song(m_Mpc)) != NULL) {
         InfoMap mdata;
         songMetaToInfoMap(song, &mdata);
-        LOG_(QString("%1 - %2 - %3 - %4")
-                .arg(mdata["pos"],2)
-                .arg(mdata["artist"])
-                .arg(mdata["title"])
-                .arg(mdata["uri"])
-                );
+        mythmusicMetaToInfoMap(mdata["uri"],  mdata["title"], &mdata);
+       //  LOG_(QString("%1 - %2 - %3 - %4")
+       //          .arg(mdata["pos"],2)
+       //          .arg(mdata["artist"])
+       //          .arg(mdata["title"])
+       //          .arg(mdata["uri"])
+       //          );
 
         unsigned pos = mpd_song_get_pos(song);
-        MythUIButtonListItem *item;
-        item = new MythUIButtonListItem(m_Playlist, " ", qVariantFromValue(pos));
-        item->SetTextFromMap(mdata);
+        mdata["pos"] = QString("%1").arg(pos);
+        new MythUIButtonListItem(m_Playlist, " ", qVariantFromValue(mdata));
+
         if (nextSongPos == pos)
         {
             updateInfo("nexttitle", mdata["title"]);
             updateInfo("nextartist", mdata["artist"]);
         }
 
-        QString art_url =  getCoverArtUrl(mdata["uri"],  mdata["title"]);
-        mdata["coverart"] = art_url;
-        if (art_url.isEmpty()) {
-            item->SetImage("");
-            item->SetImage("", "coverart");
-        }
-        else {
-            item->SetImage(art_url);
-            item->SetImage(art_url, "coverart");
-        }
-        item->SetImage(mdata["coverart"], "coverart");
-
-        mpd_song_free(song);
+       mpd_song_free(song);
     }
     updatePlaylistSongStates();
 }
@@ -139,7 +128,9 @@ void Mpc::updatePlaylistSongStates(){
         MythUIButtonListItem *item = m_Playlist->GetItemAt(i);
         item->SetFontState("normal");
         item->DisplayState("default", "playstate");
-        if (m_CurrentSongPos > 0 && m_CurrentSongPos == item->GetData()) {
+        InfoMap mdata = item->GetData().value<InfoMap>();
+        unsigned song_pos = mdata["pos"].toInt();
+        if (m_CurrentSongPos > 0 && m_CurrentSongPos == song_pos) {
 
             if (isPlaying()) {
                 item->SetFontState("running");
@@ -236,6 +227,11 @@ void Mpc::updateInfo(QString key, QString value){
         m_MuteState->DisplayState(value);
         return;
     }
+
+    if (key == "rating"){
+        m_RatingState->DisplayState(value);
+    }
+
 }
 
 
@@ -272,10 +268,12 @@ bool Mpc::create(void){
     UIUtilE::Assign(this, m_NextBtn, "next", &err);
     UIUtilE::Assign(this, m_CoverartImage, "coverart", &err);
     UIUtilE::Assign(this, m_Playlist, "currentplaylist", &err);
-    // m_Playlist->SetEnabled(false);
 
     connect(m_Playlist, SIGNAL(itemClicked(MythUIButtonListItem *)),
             this, SLOT(onQueueItemClicked(MythUIButtonListItem *)));
+    connect(m_Playlist, SIGNAL(itemVisible(MythUIButtonListItem*)),
+            this, SLOT(onQueueItemVisible(MythUIButtonListItem*)));
+
 
     connect(m_PrevBtn, SIGNAL(Clicked()), this, SLOT(prev()));
     connect(m_NextBtn, SIGNAL(Clicked()), this, SLOT(next()));
@@ -310,12 +308,36 @@ bool Mpc::create(void){
     return true;
 }
 
+void Mpc::onQueueItemVisible(MythUIButtonListItem* item){
+    if (!m_Mpc) {
+        LOG_("Not connected to MPD");
+        return;
+    }
+   InfoMap mdata = item->GetData().value<InfoMap>();
+
+   item->SetTextFromMap(mdata);
+
+   QString art_url = mdata["coverart"];
+   if (art_url.isEmpty()) {
+       item->SetImage("");
+       item->SetImage("", "coverart");
+   }
+   else {
+       //     art_url = art_url + "&"; 
+       item->SetImage(art_url);
+       item->SetImage(art_url, "coverart");
+   }
+
+   item->DisplayState(mdata["rating"], "ratingstate");
+}
+
 void Mpc::onQueueItemClicked(MythUIButtonListItem* item){
     if (!m_Mpc) {
         LOG_("Not connected to MPD");
         return;
     }
-    unsigned song_pos = item->GetData().toInt();
+   InfoMap mdata = item->GetData().value<InfoMap>();
+   unsigned song_pos = mdata["pos"].toInt();
     mpd_run_play_pos(m_Mpc,  song_pos);
     poll();
 }
@@ -498,28 +520,26 @@ void Mpc::poll(){
     song = mpd_run_current_song(m_Mpc);
     if (song != NULL) {
         InfoMap m;
-        songMetaToInfoMap(song, &m);
-        QHash<QString,QString>::iterator i;
-        for (i = m.begin(); i != m.end(); i++)
-            updateInfo(i.key(), i.value());
+        songMetaToInfoMap(song, &m); // Always have to read title to update radio stream titles
 
-        //   updateInfo("album", getTag( MPD_TAG_ALBUM, song));
-        //   updateInfo("title", getTag( MPD_TAG_TITLE, song));
-        //   updateInfo("track", getTag( MPD_TAG_TRACK, song));
-        //   updateInfo("name", getTag( MPD_TAG_NAME, song));
-        //   QString artist = getTag(MPD_TAG_ARTIST, song);
-        //   if (artist.isEmpty())
-        //       updateInfo("artist", stateInfo["name"]);
-        //   else
-        //       updateInfo("artist", artist);
-
-        //   updateInfo("date", getTag( MPD_TAG_DATE, song));
         unsigned pos = mpd_song_get_pos(song);
         if(pos != m_CurrentSongPos){
             reloadPlaylist = true;
             m_CurrentSongPos = pos;
-            updateCoverArt();
+            mythmusicMetaToInfoMap(m["uri"],  m["title"], &m);
+
+            m_CoverartImage->Reset();
+            QString url = stateInfo["coverart"];
+            if (!url.isEmpty()){
+                m_CoverartImage->SetFilename(url);
+                m_CoverartImage->Load();
+            }
         }
+
+        QHash<QString,QString>::iterator i;
+        for (i = m.begin(); i != m.end(); i++)
+            updateInfo(i.key(), i.value());
+
         mpd_song_free(song);
     }
 
@@ -536,9 +556,9 @@ QString Mpc::getTag(mpd_tag_type tag, mpd_song* song){
     return QString("%1").arg(mpd_song_get_tag(song, tag, 0));
 }
 
-QString Mpc::getCoverArtUrl(QString uri, QString title){
+void Mpc::mythmusicMetaToInfoMap(QString uri, QString title, InfoMap *m){
     MSqlQuery query(MSqlQuery::InitCon());
-    query.prepare("SELECT song_id from `music_songs` WHERE `filename` = :FILENAME AND `name` = :NAME");
+    query.prepare("SELECT song_id,rating from `music_songs` WHERE `filename` = :FILENAME AND `name` = :NAME");
 
     int idx = uri.lastIndexOf("/");
     QString fname;
@@ -546,39 +566,30 @@ QString Mpc::getCoverArtUrl(QString uri, QString title){
         fname = uri;
     else
         fname = uri.mid(idx+1,uri.length());
+
     query.bindValue(":FILENAME", fname );
     query.bindValue(":NAME", title);
 
-    LOG_(QString("lockign for idx=%1 '").arg(idx) +uri );
-    LOG_("lockign for '" + fname + "'  '" + title);
     if (!query.exec())
     {
         LOG_("Could not read timers from DB.");
-        return "";
+        return;
     }
     while(query.next())
     {
         int songId = query.value(0).toInt();
-        QString url =  QString("http://127.0.0.1:6544/Content/GetAlbumArt?Id=%1").arg(songId);
-        LOG_("url: " + url);
-        return url;
-    }
-    return "";
-}
-
-void Mpc::updateCoverArt() {
-
-    QString url = getCoverArtUrl( stateInfo["uri"],  stateInfo["title"]);
-
-    if (url.isEmpty()){
-        LOG_("No Cover art found");
+        QString rating =query.value(1).toString();
+        QString url =  QString("http://%1:%2/Content/GetAlbumArt?Id=%3")
+            .arg(m_MasterBackend)
+            .arg(m_MasterBackendPort)
+            .arg(songId);
+    //    LOG_(QString("rating %1 url %2 ").arg(rating).arg(url));
+        m->insert("coverart",url);
+        m->insert("rating",rating);
         return;
     }
-
-    LOG_(url);
-    m_CoverartImage->SetFilename(url);
-    m_CoverartImage->Load();
 }
+
 
 void Mpc::stop(){
     LOG_("stop");
