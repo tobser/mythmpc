@@ -10,6 +10,7 @@
 #include <mythtv/libmythui/mythuistatetype.h>
 #include <mythtv/libmythui/mythuiimage.h>
 #include <mythtv/libmythui/mythuiprogressbar.h>
+#include <mythtv/libmythui/mythuivideo.h>
 #include <QTimer>
 // #include <libmpd-1.0/libmpd/libmpd.h>
 // #include <libmpd-1.0/libmpd/debug_printf.h>
@@ -36,7 +37,7 @@ class Mpc : public MythScreenType
         bool create(void);
         InfoMap stateInfo;
         void updateSongInfo();
-        void updatePlaylist();
+        void loadPlaylist();
         void updatePlaybackState();
         void updateInfo(QString key, QString value);
         void updateTotalSongTime();
@@ -69,6 +70,8 @@ class Mpc : public MythScreenType
         void mythmusicMetaToInfoMap(QString uri, QString title, InfoMap* m);
         void onQueueItemClicked(MythUIButtonListItem* item);
         void onQueueItemVisible(MythUIButtonListItem* item);
+        void selectCurrentSong();
+        void createOrUpdateQueueItem(int pos, InfoMap meta);
 
     private:
         void changeVolume(int volChange);
@@ -95,6 +98,8 @@ class Mpc : public MythScreenType
         unsigned        m_knownQueueVersion;
         QString         m_MasterBackend;
         int             m_MasterBackendPort;
+        MSqlQuery       m_SqlQuery;
+        bool            m_SelectCurrent;
 
         // ui
         MythUIButton       *m_StopBtn;
@@ -117,6 +122,7 @@ class Mpc : public MythScreenType
         MythUIImage        *m_CoverartImage;
         MpcVolumeDialog    *m_VolumeDialog;
         MythUIButtonList   *m_Playlist;
+        MythUIImage        *m_Visualizerborder;
 
 };
 
