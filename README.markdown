@@ -15,7 +15,7 @@ This plugin is of no use to you without MPD.
 * changing the current play queue
 
 ## Installation
-    apt-get install qt5-default ccache g++ libmpdclient-dev mythtv-frontend libmyth-dev
+    apt-get install qt5-default ccache g++ libmpdclient-dev mythmusic mythtv-frontend libmyth-dev
     git clone git://github.com/tobser/mythmpc.git
     cd mythmpc
     ./configure
