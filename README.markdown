@@ -4,6 +4,8 @@ A simple mythtv plugin to remote control MPD (Music Player Daemon).
 
 This plugin is of no use to you without MPD.
 
+![main screen](https://raw.githubusercontent.com/tobser/mythmpc/master/screenshots/main_screen.png)
+
 ## Features
 * Display current playlist
 * play/pause/stop
