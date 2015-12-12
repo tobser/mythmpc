@@ -414,7 +414,6 @@ bool Mpc::keyPressEvent(QKeyEvent *e)
             return true;
         }
 
-
         if (*it == "MUTE") {
             toggleMute();
             return true;
@@ -580,13 +579,12 @@ void Mpc::mythmusicMetaToInfoMap(QString uri, QString title, InfoMap *m){
     m_SqlQuery.bindValue(":FILENAME", fname );
     m_SqlQuery.bindValue(":NAME", title);
 
-    if (!m_SqlQuery.exec())
-    {
-        LOG_("Could not read timers from DB.");
+    if (!m_SqlQuery.exec()) {
+        LOG_("Could not read songinfo from DB.");
         return;
     }
-    while(m_SqlQuery.next())
-    {
+
+    while(m_SqlQuery.next()) {
         int songId = m_SqlQuery.value(0).toInt();
         QString rating = m_SqlQuery.value(1).toString();
         QString url =  QString("http://%1:%2/Content/GetAlbumArt?Id=%3")
@@ -599,7 +597,6 @@ void Mpc::mythmusicMetaToInfoMap(QString uri, QString title, InfoMap *m){
         return;
     }
 }
-
 
 void Mpc::stop(){
     LOG_("stop");
