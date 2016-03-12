@@ -376,8 +376,10 @@ bool Mpc::connectToMpd(){
 
 bool Mpc::keyPressEvent(QKeyEvent *e)
 {
-    if (GetMythMainWindow()->IsExitingToMain())
+    if (GetMythMainWindow()->IsExitingToMain()){
+        Close();
         return false;
+    }
 
     QStringList actions;
 
